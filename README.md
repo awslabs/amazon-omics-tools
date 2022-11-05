@@ -1,35 +1,64 @@
 # Amazon Omics Tools
 
-Tools for working with the Amazon Omics service.
+Tools for working with the Amazon Omics Service.
 
-## Using OmicsTransfer
+## Using the Omics Transfer Manager
 
+### Basic Usage
 ```python
-#!/usr/bin/env python3
+import boto3
+from omics.transfer import ReferenceFileName, ReadSetFileName
+from omics.transfer.manager import TransferManager
 
-from botocore.session import get_session
-from omics_transfer import OmicsTransfer
+REFERENCE_STORE_ID = "<my-reference-store-id>"
+SEQUENCE_STORE_ID = "<my-sequence-store-id>"
 
-def create_client():
-    session = get_session()
-    client = session.create_client(
-        "omics",
-        region_name="us-west-2",
-    )
-    return client
+client = boto3.client("omics", "us-west-2")
+manager = TransferManager(client)
 
-def test_download_readset():
-    # This will download the readset and save it as the filename provided
-    # Download time depends on the bandwidth available and network latency
-    omics_transfer = OmicsTransfer(create_client())
-    omics_transfer.download_readset("<sequence_store_id>", "<read_set_id>", "<file_name>")
+# Download all files for a reference.
+# By default they will be stored in a directory called "omics-data"
+# or you can specify a custom directory.
+manager.download_reference(REFERENCE_STORE_ID, "<my-reference-id>")
 
-def test_download_all():
-    # This will download all the readset files and save it under ./download_all_directory/
-    omics_transfer = OmicsTransfer(create_client())
-    omics_transfer.download_readset_all("<sequence_store_id>", "<read_set_id>", "./download_all_directory/")
+# Download all files for a read set.
+# By default they will be stored in a directory called "omics_read_sets".
+manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>")
+```
 
-test_download_readset()
+### Download specific files
+```python
+
+# Download a specific reference file.
+# By default it will be stored in "omics-data".
+manager.download_reference_file(
+    REFERENCE_STORE_ID,
+    "<my-reference-id>",
+    ReferenceFileName.INDEX
+)
+
+# Download a specific read set file.
+# You can specify a custom filename.
+manager.download_read_set_file(
+    SEQUENCE_STORE_ID,
+    "<my-read-set-id>",
+    ReadSetFileName.SOURCE1,
+    "my-sequence-data/read-set-source1"
+)
+```
+
+### Subscribe to events
+```python
+
+class ProgressReporter(OmicsTransferSubscriber):
+    def on_queued(self, **kwargs):
+        future: OmicsTransferFuture = kwargs["future"]
+        print(f"Download queued: {future.meta.call_args.fileobj}")
+
+    def on_done(self, **kwargs):
+        print("Download complete")
+
+manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>", subscribers=[ProgressReporter()])
 ```
 
 ## Security

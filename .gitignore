@@ -4,3 +4,4 @@ __pycache__/
 *.iml
 dist
 local-dependencies/
+test_file
