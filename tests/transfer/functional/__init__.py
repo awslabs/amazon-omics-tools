@@ -3,10 +3,10 @@ from io import BytesIO
 
 from botocore.stub import ANY
 
-from tests import TEST_CONSTANTS, TEST_CONSTANTS_REFERENCE_STORE
+from tests.transfer import TEST_CONSTANTS, TEST_CONSTANTS_REFERENCE_STORE
 
 
-def add_get_readset_metadata_response(stubber, files=None):
+def add_get_read_set_metadata_response(stubber, files=None):
     if files is None:
         files = ["source1"]
     file_metadata = {}
@@ -30,7 +30,7 @@ def add_get_readset_metadata_response(stubber, files=None):
     )
 
 
-def add_get_readset_responses(stubber, file="SOURCE1"):
+def add_get_read_set_responses(stubber, file="SOURCE1"):
     for i in range(0, len(TEST_CONSTANTS["content"]), TEST_CONSTANTS["part_size"]):
         if i + TEST_CONSTANTS["part_size"] > len(TEST_CONSTANTS["content"]):
             stream = BytesIO(TEST_CONSTANTS["content"][i:])
@@ -101,10 +101,10 @@ def add_get_reference_responses(stubber, file="SOURCE"):
         )
 
 
-def create_download_readset_call_kwargs(filename):
+def create_download_read_set_call_kwargs(filename):
     return {
         "sequence_store_id": TEST_CONSTANTS["sequence_store_id"],
-        "readset_id": TEST_CONSTANTS["read_set_id"],
+        "read_set_id": TEST_CONSTANTS["read_set_id"],
         "fileobj": filename,
     }
 

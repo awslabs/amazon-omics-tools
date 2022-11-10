@@ -13,31 +13,31 @@ ci: lint test check-types check-dependencies ## Run all checks (test, lint, chec
 .PHONY: ci
 
 test:  ## Run tests
-	poetry run pytest --cov=omics_transfer tests --reruns 5
+	poetry run pytest --cov=omics --cov-report term-missing tests --reruns 5
 .PHONY: test
 
 lint:  ## Run linting
-	poetry run black --check omics_transfer tests
-	poetry run isort -c omics_transfer tests
-	poetry run flake8 omics_transfer tests
+	poetry run black --check omics tests
+	poetry run isort -c omics tests
+	poetry run flake8 omics tests
+	poetry run mypy omics --show-error-codes
 .PHONY: lint
 
 lint-fix:  ## Run autoformatters
-	poetry run black omics_transfer tests
-	poetry run isort omics_transfer tests
+	poetry run black omics tests
+	poetry run isort omics tests
 .PHONY: lint-fix
 
 check-types:  ## Run type check
-	poetry run mypy omics_transfer tests --show-error-codes
+	poetry run mypy omics tests --show-error-codes
 .PHONY: check-types
 
 check-dependencies:  ## Run security checks on dependencies
-	poetry run bandit -r omics_transfer/*
+	poetry run bandit -r omics/*
 	poetry run pip-audit
 .PHONY: check-dependencies
 
 generate-stubs:  ## Generate type stubs
-	mkdir -p local-dependencies/stubs/mypy_boto3_omics_package
 	poetry run python -m mypy_boto3_builder local-dependencies/stubs -s omics --skip-published
 .PHONY: generate-stubs
 

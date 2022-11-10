@@ -1,25 +1,30 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 from s3transfer.constants import KB
 
 
-class OmicsTransferConfig:
-    """Configuration options for Omics Transfer."""
+class TransferConfig:
+    """Configuration options for the Omics Transfer Manager."""
 
     def __init__(
         self,
-        max_request_concurrency=10,
-        max_submission_concurrency=5,
-        max_request_queue_size=1000,
-        max_submission_queue_size=1000,
-        max_io_queue_size=1000,
-        io_chunksize=256 * KB,
-        num_download_attempts=5,
+        use_threads: bool = True,
+        directory: str = "omics-data",
+        max_request_concurrency: int = 10,
+        max_submission_concurrency: int = 5,
+        max_request_queue_size: int = 1000,
+        max_submission_queue_size: int = 1000,
+        max_io_queue_size: int = 1000,
+        io_chunksize: int = 256 * KB,
+        num_download_attempts: int = 5,
     ):
-        """Initialize an OmicsTransferConfig object.
+        """Create a Transfer Manager configuration.
 
         Args:
+            use_threads: If True, threads will be used.
+                If False, no threads will be used in performing transfers;
+                all logic will be run in the main thread.
+
+            directory: Directory to write data to.
+
             max_request_concurrency: The maximum number of Omics API
                 transfer-related requests that can happen at a time.
 
@@ -53,6 +58,8 @@ class OmicsTransferConfig:
                 ``num_download_attempts`` does not take into account the
                 number of exceptions retried by botocore.
         """
+        self.use_threads = use_threads
+        self.directory = directory
         self.max_request_concurrency = max_request_concurrency
         self.max_submission_concurrency = max_submission_concurrency
         self.max_request_queue_size = max_request_queue_size
@@ -62,9 +69,9 @@ class OmicsTransferConfig:
         self.num_download_attempts = num_download_attempts
         self._validate_attrs_are_nonzero()
 
-    def _validate_attrs_are_nonzero(self):
+    def _validate_attrs_are_nonzero(self) -> None:
         for attr, attr_val in self.__dict__.items():
-            if attr_val is not None and attr_val <= 0:
+            if attr_val is not None and (type(attr_val) == int) and attr_val <= 0:
                 raise ValueError(
                     "Provided parameter %s of value %s must be greater than "
                     "0." % (attr, attr_val)

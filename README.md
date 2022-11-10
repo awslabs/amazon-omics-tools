@@ -1,35 +1,77 @@
 # Amazon Omics Tools
 
-Tools for working with the Amazon Omics service.
+Tools for working with the Amazon Omics Service.
 
-## Using OmicsTransfer
+## Using the Omics Transfer Manager
+
+### Basic Usage
+The `TransferManager` class makes it easy to download files for an Omics reference or read set.  By default the files are saved to a subdirectory called `omics-data`, or you can specify a custom location with the `directory` parameter.
 
 ```python
-#!/usr/bin/env python3
+import boto3
+from omics.transfer import ReferenceFileName, ReadSetFileName
+from omics.transfer.manager import TransferManager
+from omics.transfer.config import TransferConfig
 
-from botocore.session import get_session
-from omics_transfer import OmicsTransfer
+REFERENCE_STORE_ID = "<my-reference-store-id>"
+SEQUENCE_STORE_ID = "<my-sequence-store-id>"
 
-def create_client():
-    session = get_session()
-    client = session.create_client(
-        "omics",
-        region_name="us-west-2",
-    )
-    return client
+client = boto3.client("omics")
+manager = TransferManager(client)
 
-def test_download_readset():
-    # This will download the readset and save it as the filename provided
-    # Download time depends on the bandwidth available and network latency
-    omics_transfer = OmicsTransfer(create_client())
-    omics_transfer.download_readset("<sequence_store_id>", "<read_set_id>", "<file_name>")
+# Download all files for a reference.
+manager.download_reference(REFERENCE_STORE_ID, "<my-reference-id>")
 
-def test_download_all():
-    # This will download all the readset files and save it under ./download_all_directory/
-    omics_transfer = OmicsTransfer(create_client())
-    omics_transfer.download_readset_all("<sequence_store_id>", "<read_set_id>", "./download_all_directory/")
+# Download all files for a read set to a custom directory.
+manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>", "my-sequence-data")
+```
 
-test_download_readset()
+### Download specific files
+Specific files can be downloaded via the `download_reference_file` and `download_read_set_file` methods.
+The `client_fileobj` parameter can be either the name of a local file to create for storing the data, or a `TextIO` or `BinaryIO` object that supports write methods.
+
+```python
+# Download a specific reference file.
+manager.download_reference_file(
+    REFERENCE_STORE_ID,
+    "<my-reference-id>",
+    ReferenceFileName.INDEX
+)
+
+# Download a specific read set file with a custom filename.
+manager.download_read_set_file(
+    SEQUENCE_STORE_ID,
+    "<my-read-set-id>",
+    ReadSetFileName.INDEX,
+    "my-sequence-data/read-set-index"
+)
+```
+
+### Subscribe to events
+Transfer events: `on_queued`, `on_progress`, and `on_done` can be observed by defining a subclass of `OmicsTransferSubscriber` and passing in an object which can receive events.
+
+```python
+class ProgressReporter(OmicsTransferSubscriber):
+    def on_queued(self, **kwargs):
+        future: OmicsTransferFuture = kwargs["future"]
+        print(f"Download queued: {future.meta.call_args.fileobj}")
+
+    def on_done(self, **kwargs):
+        print("Download complete")
+
+manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>", subscribers=[ProgressReporter()])
+```
+
+### Threads
+Transfer operations use threads to implement concurrency. Thread use can be disabled by setting the `use_threads` attribute to False.
+
+If thread use is disabled, transfer concurrency does not occur. Accordingly, the value of the `max_request_concurrency` attribute is ignored.
+
+```python
+# Disable thread use/transfer concurrency
+config = TransferConfig(use_threads=False)
+manager = TransferManager(client, config)
+manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>")
 ```
 
 ## Security

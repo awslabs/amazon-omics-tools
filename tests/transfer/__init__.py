@@ -2,22 +2,22 @@ import unittest
 
 import botocore.session
 from botocore.stub import Stubber
-from s3transfer.futures import (
-    BoundedExecutor,
-    TransferCoordinator,
-    TransferFuture,
-    TransferMeta,
-)
-from s3transfer.subscribers import BaseSubscriber
+from s3transfer.futures import BoundedExecutor, TransferCoordinator, TransferMeta
 from s3transfer.utils import OSUtils
 
-from omics_transfer.manager import OmicsTransferConfig
+from omics.transfer import (
+    OmicsTransferFuture,
+    OmicsTransferSubscriber,
+    ReadSetFileName,
+    ReferenceFileName,
+)
+from omics.transfer.config import TransferConfig
 
 TEST_CONSTANTS = {
     "sequence_store_id": "1234567890",
     "read_set_id": "0987654321",
     "content": b"my test content",
-    "file": "SOURCE1",
+    "file": ReadSetFileName.SOURCE1.value,
     "part_size": 2,
     "total_parts": 8,
 }
@@ -26,7 +26,7 @@ TEST_CONSTANTS_REFERENCE_STORE = {
     "reference_store_id": "1234567890",
     "reference_id": "0987654321",
     "content": b"my ref test content",
-    "file": "SOURCE",
+    "file": ReferenceFileName.SOURCE.value,
     "part_size": 2,
     "total_parts": 10,
 }
@@ -72,13 +72,15 @@ class BaseTaskTest(StubbedClientTest):
         return task_cls(**kwargs)
 
     def get_transfer_future(self, call_args=None):
-        return TransferFuture(meta=TransferMeta(call_args), coordinator=self.transfer_coordinator)
+        return OmicsTransferFuture(
+            meta=TransferMeta(call_args), coordinator=self.transfer_coordinator
+        )
 
 
 class BaseSubmissionTaskTest(BaseTaskTest):
     def setUp(self):
         super().setUp()
-        self.config = OmicsTransferConfig()
+        self.config = TransferConfig()
         self.osutil = OSUtils()
         self.executor = BoundedExecutor(
             1000,
@@ -139,7 +141,7 @@ class StreamWithError:
         return self._stream.read(n)
 
 
-class RecordingSubscriber(BaseSubscriber):
+class RecordingSubscriber(OmicsTransferSubscriber):
     def __init__(self):
         self.on_queued_calls = []
         self.on_progress_calls = []
