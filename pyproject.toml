@@ -8,12 +8,12 @@ version = "0.1.0"
 description = ""
 authors = ["Amazon Web Services"]
 readme = "README.md"
-packages = [{ include = "omics_transfer" }]
+packages = [{ include = "omics" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 s3transfer = "^0.6.0"
-botocore = { file = "local-dependencies/botocore-1.27.86.tar.gz" }
+botocore = { file = "local-dependencies/botocore-1.29.14.tar.gz" }
 mypy-boto3-omics = { path = "local-dependencies/stubs/mypy_boto3_omics_package" }
 
 [tool.poetry.group.dev.dependencies]

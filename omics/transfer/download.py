@@ -65,16 +65,16 @@ class DownloadSubmissionTask(SubmissionTask):
         else:
             raise AttributeError(f"Unexpected Omics file type: {transfer_args.omics_file_type}")
 
-        filenameKey = transfer_args.filename.lower()
+        filename_key = transfer_args.filename.lower()
 
-        if filenameKey not in metadata_files.keys():
+        if filename_key not in metadata_files.keys():
             raise ValueError(
-                f"File '{filenameKey}' was not found in sequence store: {transfer_args.store_id}"
+                f"File '{filename_key}' was not found in sequence store: {transfer_args.store_id}"
             )
 
-        part_size = metadata_files[filenameKey]["partSize"]
-        num_parts = metadata_files[filenameKey]["totalParts"]
-        content_length = metadata_files[filenameKey]["contentLength"]
+        part_size = metadata_files[filename_key]["partSize"]
+        num_parts = metadata_files[filename_key]["totalParts"]
+        content_length = metadata_files[filename_key]["contentLength"]
 
         transfer_future.meta.provide_transfer_size(content_length)
         # Get any associated tags for the get object task.

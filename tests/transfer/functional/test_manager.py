@@ -69,16 +69,18 @@ class SingleThreadedTransferManagerTest(StubbedClientTest):
         )
 
         possible_matches = os.listdir(self.tempdir)
+
+        print(possible_matches)
         self.assertEqual(len(possible_matches), 2)
         self.assertEqual(
             set(possible_matches),
-            {"1234567890_0987654321_source1", "1234567890_0987654321_source2"},
+            {"test-read-set_1.fastq.gz", "test-read-set_2.fastq.gz"},
         )
 
-        with open(os.path.join(self.tempdir, "1234567890_0987654321_source1"), "rb") as f:
+        with open(os.path.join(self.tempdir, "test-read-set_2.fastq.gz"), "rb") as f:
             self.assertEqual(TEST_CONSTANTS["content"], f.read())
 
-        with open(os.path.join(self.tempdir, "1234567890_0987654321_source2"), "rb") as f:
+        with open(os.path.join(self.tempdir, "test-read-set_2.fastq.gz"), "rb") as f:
             self.assertEqual(TEST_CONSTANTS["content"], f.read())
 
     def test_download_read_set_without_wait(self):
@@ -128,13 +130,13 @@ class SingleThreadedTransferManagerTest(StubbedClientTest):
         self.assertEqual(len(possible_matches), 2)
         self.assertEqual(
             set(possible_matches),
-            {"1234567890_0987654321_source", "1234567890_0987654321_index"},
+            {"test-reference-file.fasta", "test-reference-file.fai"},
         )
 
-        with open(os.path.join(self.tempdir, "1234567890_0987654321_source"), "rb") as f:
+        with open(os.path.join(self.tempdir, "test-reference-file.fasta"), "rb") as f:
             self.assertEqual(TEST_CONSTANTS_REFERENCE_STORE["content"], f.read())
 
-        with open(os.path.join(self.tempdir, "1234567890_0987654321_index"), "rb") as f:
+        with open(os.path.join(self.tempdir, "test-reference-file.fai"), "rb") as f:
             self.assertEqual(TEST_CONSTANTS_REFERENCE_STORE["content"], f.read())
 
     def test_download_reference_without_wait(self):
@@ -216,6 +218,7 @@ class MultiThreadedTransferManagerTest(StubbedClientTest):
 
     def test_download_read_set_file_to_config_dir(self):
         add_get_read_set_metadata_response(self.stubber)
+        add_get_read_set_metadata_response(self.stubber)
         add_get_read_set_responses(self.stubber)
 
         new_directory = f"{self.tempdir}/test-default"
@@ -237,7 +240,7 @@ class MultiThreadedTransferManagerTest(StubbedClientTest):
 
         expected_filename = os.path.join(
             new_directory,
-            f'{TEST_CONSTANTS["sequence_store_id"]}_{TEST_CONSTANTS["read_set_id"]}_{ReadSetFileName.SOURCE1.value.lower()}',
+            "test-read-set.fastq.gz",
         )
 
         with open(expected_filename, "rb") as f:

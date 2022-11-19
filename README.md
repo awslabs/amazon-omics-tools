@@ -5,7 +5,7 @@ Tools for working with the Amazon Omics Service.
 ## Using the Omics Transfer Manager
 
 ### Basic Usage
-The `TransferManager` class makes it easy to download files for an Omics reference or read set.  By default the files are saved to a subdirectory called `omics-data`, or you can specify a custom location with the `directory` parameter.
+The `TransferManager` class makes it easy to download files for an Omics reference or read set.  By default the files are saved to the current directory, or you can specify a custom location with the `directory` parameter.
 
 ```python
 import boto3

@@ -25,6 +25,7 @@ def add_get_read_set_metadata_response(stubber, files=None):
             "sequenceStoreId": TEST_CONSTANTS["sequence_store_id"],
             "status": "ACTIVE",
             "fileType": "FASTQ",
+            "name": "test-read-set",
             "files": file_metadata,
         },
     )
@@ -68,6 +69,7 @@ def add_get_reference_metadata_response(stubber, files=None):
             "referenceStoreId": TEST_CONSTANTS_REFERENCE_STORE["reference_store_id"],
             "status": "ACTIVE",
             "files": file_metadata,
+            "name": "test-reference-file",
             "md5": "eb247690435415724f20d8702e011966",
         },
     )

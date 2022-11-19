@@ -7,7 +7,7 @@ class TransferConfig:
     def __init__(
         self,
         use_threads: bool = True,
-        directory: str = "omics-data",
+        directory: str = ".",
         max_request_concurrency: int = 10,
         max_submission_concurrency: int = 5,
         max_request_queue_size: int = 1000,
