@@ -1,4 +1,6 @@
 import copy
+import gzip
+import io
 from io import BytesIO
 
 from botocore.stub import ANY
@@ -47,6 +49,49 @@ def add_get_read_set_responses(stubber, file="SOURCE1"):
                 "partNumber": ANY,
             },
         )
+
+
+def add_gzipped_get_read_set_metadata_response(stubber, files=None):
+    # Just use one part when testing gzipped data
+    if files is None:
+        files = ["source1"]
+    file_metadata = {}
+    for file in files:
+        file_metadata[file] = {
+            "contentLength": len(TEST_CONSTANTS["content"]),
+            "partSize": len(TEST_CONSTANTS["content"]),
+            "totalParts": 1,
+        }
+    stubber.add_response(
+        "get_read_set_metadata",
+        {
+            "arn": "test_arn",
+            "creationTime": "2022-06-21T16:30:32Z",
+            "id": TEST_CONSTANTS["read_set_id"],
+            "sequenceStoreId": TEST_CONSTANTS["sequence_store_id"],
+            "status": "ACTIVE",
+            "fileType": "FASTQ",
+            "name": "test-read-set",
+            "files": file_metadata,
+        },
+    )
+
+
+def add_gzipped_get_read_set_response(stubber, file="SOURCE1"):
+    stream = io.BytesIO()
+    with gzip.open(stream, "wb") as f:
+        f.write(TEST_CONSTANTS["content"])
+    stream.seek(0)
+    stubber.add_response(
+        "get_read_set",
+        service_response=copy.deepcopy({"payload": stream}),
+        expected_params={
+            "sequenceStoreId": TEST_CONSTANTS["sequence_store_id"],
+            "id": TEST_CONSTANTS["read_set_id"],
+            "file": file,
+            "partNumber": ANY,
+        },
+    )
 
 
 def add_get_reference_metadata_response(stubber, files=None):

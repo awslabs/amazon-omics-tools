@@ -84,11 +84,11 @@ class TestTransferManager(StubbedClientTest):
 
     def test_format_local_filename_with_lowercase_file_type(self):
         filename = _format_local_filename("test-filename", ReferenceFileName.INDEX, "fasta")
-        self.assertEqual(filename, "test-filename.fai")
+        self.assertEqual(filename, "test-filename.fasta.fai")
 
     def test_format_fasta_index_local_filename(self):
         filename = _format_local_filename("test-filename", ReferenceFileName.INDEX, "FASTA")
-        self.assertEqual(filename, "test-filename.fai")
+        self.assertEqual(filename, "test-filename.fasta.fai")
 
     def test_format_fasta_source_local_filename(self):
         filename = _format_local_filename("test-filename", ReferenceFileName.SOURCE, "FASTA")
@@ -96,7 +96,7 @@ class TestTransferManager(StubbedClientTest):
 
     def test_format_bam_index_local_filename(self):
         filename = _format_local_filename("test-filename", ReadSetFileName.INDEX, "BAM")
-        self.assertEqual(filename, "test-filename.bai")
+        self.assertEqual(filename, "test-filename.bam.bai")
 
     def test_format_bam_source1_local_filename(self):
         filename = _format_local_filename("test-filename", ReadSetFileName.SOURCE1, "BAM", True)
@@ -108,7 +108,7 @@ class TestTransferManager(StubbedClientTest):
 
     def test_format_cram_index_local_filename(self):
         filename = _format_local_filename("test-filename", ReadSetFileName.INDEX, "CRAM")
-        self.assertEqual(filename, "test-filename.crai")
+        self.assertEqual(filename, "test-filename.cram.crai")
 
     def test_format_cram_source1_local_filename(self):
         filename = _format_local_filename("test-filename", ReadSetFileName.SOURCE1, "CRAM", True)
@@ -121,7 +121,7 @@ class TestTransferManager(StubbedClientTest):
 
     def test_format_gz_local_filename(self):
         filename = _format_local_filename("test-filename", ReadSetFileName.SOURCE1, "FASTQ", True)
-        self.assertEqual(filename, "test-filename_1.fastq.gz")
+        self.assertEqual(filename, "test-filename_1.fastq")
 
     def test_format_complicated_local_filename(self):
         extension = ".bam"
@@ -132,10 +132,11 @@ class TestTransferManager(StubbedClientTest):
         self.assertEqual(filename, filename_base + "_1" + extension)
 
         filename_base = "TestFilenameWithWeirdChars abc...xzy1234567890_!@నేనుÆды.-test-.ext"
+        expected_filename_base = "TestFilenameWithWeirdChars_abc...xzy1234567890_ననÆды.-test-.ext"
         filename = _format_local_filename(
             filename_base + extension, ReadSetFileName.SOURCE1, "BAM", True
         )
-        self.assertEqual(filename, filename_base + "_1" + extension)
+        self.assertEqual(filename, expected_filename_base + "_1" + extension)
 
     def test_format_local_filename_removes_original_extension(self):
         filename = _format_local_filename(

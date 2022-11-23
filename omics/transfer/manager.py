@@ -1,10 +1,10 @@
 import os
+import re
 from concurrent.futures import CancelledError
 from typing import IO, Any, List, Type, Union
 
 from mypy_boto3_omics.client import OmicsClient
 from s3transfer.download import (
-    DownloadFilenameOutputManager,
     DownloadNonSeekableOutputManager,
     DownloadOutputManager,
     DownloadSeekableOutputManager,
@@ -29,7 +29,10 @@ from omics.transfer import (
     ReferenceFileName,
 )
 from omics.transfer.config import TransferConfig
-from omics.transfer.download import DownloadSubmissionTask
+from omics.transfer.download import (
+    DownloadSubmissionTask,
+    OmicsDownloadFilenameOutputManager,
+)
 
 DONE_CALLBACK_TYPE: str = "done"
 
@@ -46,13 +49,10 @@ FILE_TYPE_EXTENSION_MAP: dict[str, str] = {
 
 # Map of file type to index file extension.
 FILE_TYPE_INDEX_EXTENSION_MAP: dict[str, str] = {
-    "FASTA": "fai",
-    "BAM": "bai",
-    "CRAM": "crai",
+    "FASTA": "fasta.fai",
+    "BAM": "bam.bai",
+    "CRAM": "cram.crai",
 }
-
-# List of file types which are downloaed in gzip format.
-GZIPPED_FILE_TYPES: List[str] = ["FASTQ"]
 
 
 class TransferManager:
@@ -355,16 +355,10 @@ class TransferManager:
         )
 
         if client_fileobj is None:
-            # Create a default client file if none is supplied
-            _create_directory(self._config.directory)
-            client_fileobj = os.path.join(
-                self._config.directory,
-                f"{store_id}_{file_set_id}_{server_filename.lower()}",
-            )
+            raise ValueError("client_fileobj parameter is required")
 
-            raise ValueError("fileobj parameter is required")
-        if DownloadFilenameOutputManager.is_compatible(client_fileobj, self._osutil):
-            download_manager: DownloadOutputManager = DownloadFilenameOutputManager(
+        if OmicsDownloadFilenameOutputManager.is_compatible(client_fileobj, self._osutil):
+            download_manager: DownloadOutputManager = OmicsDownloadFilenameOutputManager(
                 self._osutil, transfer_coordinator, self._io_executor
             )
         elif DownloadSeekableOutputManager.is_compatible(client_fileobj, self._osutil):
@@ -518,8 +512,11 @@ def _format_local_filename(
     # File type should be uppercase, though we support passing in lower case.
     file_type = file_type.upper()
 
-    # Remove any extensions that may be part of the original file name.
+    # Remove extensions that that users may have added to the name since we will be adding our own.
     file_name = _remove_file_extensions(file_name)
+
+    # Remove or replace characters that are not valid for a file name.
+    file_name = _get_valid_filename(file_name)
 
     # Handle index file names first.
     if server_filename in [ReferenceFileName.INDEX, ReadSetFileName.INDEX]:
@@ -543,15 +540,11 @@ def _format_local_filename(
     else:
         print(f"Unexpected file type: {file_type}.  No extension applied.")
 
-    # Add '.gz' if the data is expected to be zipped.
-    if file_type in GZIPPED_FILE_TYPES:
-        file_name = file_name + ".gz"
-
     return file_name
 
 
-# Remove any extensions from the file name.
 def _remove_file_extensions(file_name: str) -> str:
+    """Remove Omics file extensions from the file name."""
     # First remove gzip extension (if present).
     if file_name[-3:].lower() == ".gz":
         file_name = file_name[:-3]
@@ -563,3 +556,21 @@ def _remove_file_extensions(file_name: str) -> str:
             file_name = file_name[: (-len(ext))]
 
     return file_name
+
+
+def _get_valid_filename(name: str):
+    """
+    Taken from `https://github.com/django/django/blob/main/django/utils/text.py`.
+
+    Return the given string converted to a string that can be used for a clean
+    filename. Remove leading and trailing spaces; convert other spaces to
+    underscores; and remove anything that is not an alphanumeric, dash,
+    underscore, or dot.
+    >>> get_valid_filename("john's portrait in 2004.jpg")
+    'johns_portrait_in_2004.jpg'
+    """
+    s = str(name).strip().replace(" ", "_")
+    s = re.sub(r"(?u)[^-\w.]", "", s)
+    if s in {"", ".", ".."}:
+        raise ValueError(f"Could not derive file name from '{s}'")
+    return s

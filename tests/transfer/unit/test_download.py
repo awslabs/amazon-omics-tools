@@ -6,10 +6,7 @@ from io import BytesIO
 from typing import IO, Any, Tuple, Union
 
 from botocore.stub import ANY
-from s3transfer.download import (
-    DownloadFilenameOutputManager,
-    DownloadSeekableOutputManager,
-)
+from s3transfer.download import DownloadSeekableOutputManager
 from s3transfer.exceptions import RetriesExceededError
 from s3transfer.futures import BoundedExecutor, TransferMeta
 from s3transfer.utils import OSUtils
@@ -20,7 +17,12 @@ from omics.transfer import (
     OmicsFileType,
     OmicsTransferFuture,
 )
-from omics.transfer.download import SOCKET_ERROR, DownloadSubmissionTask, GetFileTask
+from omics.transfer.download import (
+    SOCKET_ERROR,
+    DownloadSubmissionTask,
+    GetFileTask,
+    OmicsDownloadFilenameOutputManager,
+)
 from tests.transfer import (
     TEST_CONSTANTS,
     TEST_CONSTANTS_REFERENCE_STORE,
@@ -104,7 +106,7 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
         self.omics_download_submission_task = DownloadSubmissionTask(self.transfer_coordinator)
 
         self.io_executor = BoundedExecutor(1000, 1)
-        self.download_manager = DownloadFilenameOutputManager(
+        self.download_manager = OmicsDownloadFilenameOutputManager(
             self.osutil, self.transfer_coordinator, self.io_executor
         )
 
@@ -188,7 +190,7 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
         add_get_read_set_metadata_response(self.stubber)
         add_get_read_set_responses(self.stubber)
 
-        self.submission_main_kwargs["download_manager"] = DownloadFilenameOutputManager(
+        self.submission_main_kwargs["download_manager"] = OmicsDownloadFilenameOutputManager(
             self.osutil, self.transfer_coordinator, self.io_executor
         )
 
@@ -260,7 +262,7 @@ class TestGetFileTask(BaseTaskTest):
         self.osutil = OSUtils()
         self.io_chunksize = 256 * (1024**2)
         self.task_cls = GetFileTask
-        self.download_output_manager = DownloadFilenameOutputManager(
+        self.download_output_manager = OmicsDownloadFilenameOutputManager(
             self.osutil, self.transfer_coordinator, self.io_executor
         )
 
