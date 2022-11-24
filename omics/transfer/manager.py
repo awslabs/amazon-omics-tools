@@ -1,10 +1,10 @@
 import os
+import re
 from concurrent.futures import CancelledError
 from typing import IO, Any, List, Type, Union
 
 from mypy_boto3_omics.client import OmicsClient
 from s3transfer.download import (
-    DownloadFilenameOutputManager,
     DownloadNonSeekableOutputManager,
     DownloadOutputManager,
     DownloadSeekableOutputManager,
@@ -29,9 +29,30 @@ from omics.transfer import (
     ReferenceFileName,
 )
 from omics.transfer.config import TransferConfig
-from omics.transfer.download import DownloadSubmissionTask
+from omics.transfer.download import (
+    DownloadSubmissionTask,
+    OmicsDownloadFilenameOutputManager,
+)
 
-DONE_CALLBACK_TYPE = "done"
+DONE_CALLBACK_TYPE: str = "done"
+
+# The only supported file type for references is FASTA.
+REFERENCE_FILE_TYPE: str = "FASTA"
+
+# Map of file type to data file extension.
+FILE_TYPE_EXTENSION_MAP: dict[str, str] = {
+    "FASTA": "fasta",
+    "FASTQ": "fastq",
+    "BAM": "bam",
+    "CRAM": "cram",
+}
+
+# Map of file type to index file extension.
+FILE_TYPE_INDEX_EXTENSION_MAP: dict[str, str] = {
+    "FASTA": "fasta.fai",
+    "BAM": "bam.bai",
+    "CRAM": "cram.crai",
+}
 
 
 class TransferManager:
@@ -119,9 +140,13 @@ class TransferManager:
 
         for filename in reference_metadata["files"]:
             reference_file = ReferenceFileName.from_object(filename.upper())
-
             file_path = os.path.join(
-                directory, f"{reference_store_id}_{reference_id}_{filename.lower()}"
+                directory,
+                _format_local_filename(
+                    reference_metadata["name"],
+                    reference_file,
+                    REFERENCE_FILE_TYPE,
+                ),
             )
 
             transfer_future = self.download_reference_file(
@@ -167,6 +192,21 @@ class TransferManager:
         """
         server_filename_enum = ReferenceFileName.from_object(server_filename)
 
+        # If a file object was not supplied then format a filename from the original name
+        if client_fileobj is None:
+            reference_metadata = self._client.get_reference_metadata(
+                referenceStoreId=reference_store_id, id=reference_id
+            )
+            _create_directory(self._config.directory)
+            client_fileobj = os.path.join(
+                self._config.directory,
+                _format_local_filename(
+                    reference_metadata["name"],
+                    server_filename,
+                    REFERENCE_FILE_TYPE,
+                ),
+            )
+
         return self._download_file(
             OmicsFileType.REFERENCE,
             reference_store_id,
@@ -209,11 +249,18 @@ class TransferManager:
             directory = self._config.directory
         _create_directory(directory)
 
+        add_source_counter = True if "source2" in read_set_metadata["files"] else False
+
         for filename in read_set_metadata["files"]:
             read_set_file = ReadSetFileName.from_object(filename.upper())
-
             file_path = os.path.join(
-                directory, f"{sequence_store_id}_{read_set_id}_{filename.lower()}"
+                directory,
+                _format_local_filename(
+                    read_set_metadata["name"],
+                    read_set_file,
+                    read_set_metadata["fileType"],
+                    add_source_counter,
+                ),
             )
 
             transfer_future = self.download_read_set_file(
@@ -259,6 +306,23 @@ class TransferManager:
         """
         server_filename_enum = ReadSetFileName.from_object(server_filename)
 
+        # If a file object was not supplied then format a filename from the original name
+        if client_fileobj is None:
+            read_set_metadata = self._client.get_read_set_metadata(
+                sequenceStoreId=sequence_store_id, id=read_set_id
+            )
+            add_source_counter = True if "source2" in read_set_metadata["files"] else False
+            _create_directory(self._config.directory)
+            client_fileobj = os.path.join(
+                self._config.directory,
+                _format_local_filename(
+                    read_set_metadata["name"],
+                    server_filename,
+                    read_set_metadata["fileType"],
+                    add_source_counter,
+                ),
+            )
+
         return self._download_file(
             OmicsFileType.READ_SET,
             sequence_store_id,
@@ -275,7 +339,7 @@ class TransferManager:
         store_id: str,
         file_set_id: str,
         server_filename: str,
-        client_fileobj: Union[IO[Any], str] = None,
+        client_fileobj: Union[IO[Any], str],
         subscribers: List[OmicsTransferSubscriber] = [],
         wait: bool = False,
     ) -> OmicsTransferFuture:
@@ -291,15 +355,10 @@ class TransferManager:
         )
 
         if client_fileobj is None:
-            # Create a default client file if none is supplied
-            _create_directory(self._config.directory)
-            client_fileobj = os.path.join(
-                self._config.directory,
-                f"{store_id}_{file_set_id}_{server_filename.lower()}",
-            )
+            raise ValueError("client_fileobj parameter is required")
 
-        if DownloadFilenameOutputManager.is_compatible(client_fileobj, self._osutil):
-            download_manager: DownloadOutputManager = DownloadFilenameOutputManager(
+        if OmicsDownloadFilenameOutputManager.is_compatible(client_fileobj, self._osutil):
+            download_manager: DownloadOutputManager = OmicsDownloadFilenameOutputManager(
                 self._osutil, transfer_coordinator, self._io_executor
             )
         elif DownloadSeekableOutputManager.is_compatible(client_fileobj, self._osutil):
@@ -430,3 +489,88 @@ def _create_directory(directory: str) -> None:
     """Create a directory if one does not exist yet."""
     if not os.path.isdir(directory):
         os.makedirs(directory, exist_ok=True)
+
+
+def _format_local_filename(
+    file_name: str,
+    server_filename: Union[ReferenceFileName, ReadSetFileName],
+    file_type: str,
+    add_source_counter: bool = False,
+) -> str:
+    """Format the name of the local file from the name and file type.
+
+    Args:
+        file_name: The name of the file as specified in the manifest.
+
+        server_filename: The name of the file as it is stored on the server (ex: index, source, source1, source2).
+
+        file_type: The type of the file on the server.
+
+        add_source_counter: Whether to add `_1` or `_2` to the name before the extension.
+            (This should be true if there is both a source1 and source2 file on the server)
+    """
+    # File type should be uppercase, though we support passing in lower case.
+    file_type = file_type.upper()
+
+    # Remove extensions that that users may have added to the name since we will be adding our own.
+    file_name = _remove_file_extensions(file_name)
+
+    # Remove or replace characters that are not valid for a file name.
+    file_name = _get_valid_filename(file_name)
+
+    # Handle index file names first.
+    if server_filename in [ReferenceFileName.INDEX, ReadSetFileName.INDEX]:
+        if file_type in FILE_TYPE_INDEX_EXTENSION_MAP:
+            return f"{file_name}.{FILE_TYPE_INDEX_EXTENSION_MAP[file_type]}"
+        else:
+            print(
+                f"Unexpected file type: {file_type}.  Applying extension 'index' to the index file."
+            )
+            return f"{file_name}.index"
+
+    # Apply a counter to the file if necessary.
+    if server_filename == ReadSetFileName.SOURCE2:
+        file_name = file_name + "_2"
+    elif add_source_counter:
+        file_name = file_name + "_1"
+
+    # Apply the extension.
+    if file_type in FILE_TYPE_EXTENSION_MAP:
+        file_name = f"{file_name}.{FILE_TYPE_EXTENSION_MAP[file_type]}"
+    else:
+        print(f"Unexpected file type: {file_type}.  No extension applied.")
+
+    return file_name
+
+
+def _remove_file_extensions(file_name: str) -> str:
+    """Remove Omics file extensions from the file name."""
+    # First remove gzip extension (if present).
+    if file_name[-3:].lower() == ".gz":
+        file_name = file_name[:-3]
+
+    # Iterate the possible omics file types.
+    for ext in FILE_TYPE_EXTENSION_MAP.values():
+        ext = "." + ext  # We're interested in the extension with the period
+        if file_name[(-len(ext)) :].lower() == ext:
+            file_name = file_name[: (-len(ext))]
+
+    return file_name
+
+
+def _get_valid_filename(name: str):
+    """
+    Taken from `https://github.com/django/django/blob/main/django/utils/text.py`.
+
+    Return the given string converted to a string that can be used for a clean
+    filename. Remove leading and trailing spaces; convert other spaces to
+    underscores; and remove anything that is not an alphanumeric, dash,
+    underscore, or dot.
+    >>> get_valid_filename("john's portrait in 2004.jpg")
+    'johns_portrait_in_2004.jpg'
+    """
+    s = str(name).strip().replace(" ", "_")
+    s = re.sub(r"(?u)[^-\w.]", "", s)
+    if s in {"", ".", ".."}:
+        raise ValueError(f"Could not derive file name from '{s}'")
+    return s

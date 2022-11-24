@@ -89,10 +89,6 @@ class FileTransfer:
         """Details of a file download.
 
         Args:
-            direction: currently only DOWN (download) is supported.
-
-            omics_file_type: the type of Omics file being transferred.
-
             store_id: the ID of the data store (either Reference Store or Sequence Store).
 
             file_set_id: Reference ID or Read Set ID.
@@ -100,6 +96,12 @@ class FileTransfer:
             filename: the name of the file when it it stored on the server.
 
             fileobj: The name of a file or IO object to transfer data to.
+
+            omics_file_type: the type of Omics file being transferred.
+
+            orig_filename: The original name of the data file (ex: "NA12878.cram")
+
+            direction: currently only DOWN (download) is supported.
 
             subscribers: The list of subscribers to be invoked in the
                 order provided based on the event emit during the process of

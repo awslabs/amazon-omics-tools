@@ -1,10 +1,15 @@
+import gzip
 import logging
 import socket
 from typing import IO, Any, List, Union
 
 from botocore.exceptions import IncompleteReadError, ReadTimeoutError
 from mypy_boto3_omics.client import OmicsClient
-from s3transfer.download import DownloadChunkIterator, DownloadOutputManager
+from s3transfer.download import (
+    DownloadChunkIterator,
+    DownloadFilenameOutputManager,
+    DownloadOutputManager,
+)
 from s3transfer.exceptions import RetriesExceededError
 from s3transfer.futures import BoundedExecutor, TransferFuture
 from s3transfer.subscribers import BaseSubscriber
@@ -65,16 +70,16 @@ class DownloadSubmissionTask(SubmissionTask):
         else:
             raise AttributeError(f"Unexpected Omics file type: {transfer_args.omics_file_type}")
 
-        filenameKey = transfer_args.filename.lower()
+        filename_key = transfer_args.filename.lower()
 
-        if filenameKey not in metadata_files.keys():
+        if filename_key not in metadata_files.keys():
             raise ValueError(
-                f"File '{filenameKey}' was not found in sequence store: {transfer_args.store_id}"
+                f"File '{filename_key}' was not found in sequence store: {transfer_args.store_id}"
             )
 
-        part_size = metadata_files[filenameKey]["partSize"]
-        num_parts = metadata_files[filenameKey]["totalParts"]
-        content_length = metadata_files[filenameKey]["contentLength"]
+        part_size = metadata_files[filename_key]["partSize"]
+        num_parts = metadata_files[filename_key]["totalParts"]
+        content_length = metadata_files[filename_key]["contentLength"]
 
         transfer_future.meta.provide_transfer_size(content_length)
         # Get any associated tags for the get object task.
@@ -180,3 +185,47 @@ class GetFileTask(Task):
                 invoke_progress_callbacks(callbacks, start_index - current_index)
                 continue
         raise RetriesExceededError(last_exception)
+
+
+class OmicsDownloadFilenameOutputManager(DownloadFilenameOutputManager):
+    """Download manager for Omics files.
+
+    Overrides the parent class to support modifying the filename after download.
+    """
+
+    def get_final_io_task(self):
+        """Rename the file from the temporary file to its final location as the final IO task."""
+        return OmicsIORenameFileTask(
+            transfer_coordinator=self._transfer_coordinator,
+            main_kwargs={
+                "fileobj": self._temp_fileobj,
+                "final_filename": self._final_filename,
+                "osutil": self._osutil,
+            },
+            is_final=True,
+        )
+
+
+class OmicsIORenameFileTask(Task):
+    """A task to rename a temporary file to its final filename.
+
+    :param fileobj: The file handle that content was written to.
+    :param final_filename: The final name of the file to rename to
+        upon completion of writing the contents.
+    :param osutil: OS utility
+    """
+
+    def _main(self, fileobj, final_filename, osutil):
+        fileobj.close()
+        if _file_is_gzipped(fileobj.name):
+            final_filename = final_filename + ".gz"
+        osutil.rename_file(fileobj.name, final_filename)
+
+
+def _file_is_gzipped(filename: str) -> bool:
+    with gzip.open(filename, "r") as fh:
+        try:
+            fh.read(1)
+        except gzip.BadGzipFile:
+            return False
+    return True
