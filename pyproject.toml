@@ -4,8 +4,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "amazon-omics-tools"
-version = "0.1.0"
-description = ""
+version = "0.1.1"
+license = "Apache-2.0"
+description = "Tools for working with the Amazon Omics Service"
+repository = "https://github.com/awslabs/amazon-omics-tools"
 authors = ["Amazon Web Services"]
 readme = "README.md"
 packages = [{ include = "omics" }]
@@ -13,8 +15,8 @@ packages = [{ include = "omics" }]
 [tool.poetry.dependencies]
 python = "^3.10"
 s3transfer = "^0.6.0"
-botocore = { file = "local-dependencies/botocore-1.29.14.tar.gz" }
-mypy-boto3-omics = { path = "local-dependencies/stubs/mypy_boto3_omics_package" }
+boto3 = "^1.26.19"
+mypy-boto3-omics = "^1.26.19"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"
@@ -25,10 +27,8 @@ flake8-docstrings = "^1.6.0"
 isort = "^5.10.1"
 pytest-cov = "^4.0.0"
 pytest-rerunfailures = "^10.2"
-mypy-boto3-builder = "^7.11.10"
 types-s3transfer = "^0.6.0.post4"
 types-setuptools = "^65.4.0.0"
-botocore-stubs = "^1.27.88"
 bandit = "^1.7.4"
 pip-audit = "^2.4.4"
 

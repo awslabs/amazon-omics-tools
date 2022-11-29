@@ -29,17 +29,13 @@ lint-fix:  ## Run autoformatters
 .PHONY: lint-fix
 
 check-types:  ## Run type check
-	poetry run mypy omics tests --show-error-codes
+	poetry run mypy omics --show-error-codes
 .PHONY: check-types
 
 check-dependencies:  ## Run security checks on dependencies
 	poetry run bandit -r omics/*
 	poetry run pip-audit
 .PHONY: check-dependencies
-
-generate-stubs:  ## Generate type stubs
-	poetry run python -m mypy_boto3_builder local-dependencies/stubs -s omics --skip-published
-.PHONY: generate-stubs
 
 .DEFAULT_GOAL := help
 help: Makefile

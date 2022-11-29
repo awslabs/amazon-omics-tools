@@ -76,7 +76,7 @@ manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>")
 
 ## Security
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+See [CONTRIBUTING](https://github.com/awslabs/amazon-omics-tools/blob/main/CONTRIBUTING.md#security-issue-notifications) for more information.
 
 ## License
 

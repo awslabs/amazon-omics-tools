@@ -3,5 +3,5 @@ __pycache__/
 .coverage
 *.iml
 dist
-local-dependencies/
 test_file
+scripts/
