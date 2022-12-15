@@ -33,7 +33,6 @@ check-types:  ## Run type check
 .PHONY: check-types
 
 check-dependencies:  ## Run security checks on dependencies
-	poetry run bandit -r omics/*
 	poetry run pip-audit
 .PHONY: check-dependencies
 

@@ -29,7 +29,6 @@ pytest-cov = "^4.0.0"
 pytest-rerunfailures = "^10.2"
 types-s3transfer = "^0.6.0.post4"
 types-setuptools = "^65.4.0.0"
-bandit = "^1.7.4"
 pip-audit = "^2.4.4"
 
 [tool.black]
