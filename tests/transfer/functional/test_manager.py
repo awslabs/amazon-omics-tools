@@ -4,7 +4,11 @@ from concurrent.futures import CancelledError
 
 from s3transfer.exceptions import FatalError
 
-from omics.transfer import OmicsFileType, ReadSetFileName, ReferenceFileName
+from omics.common.omics_file_types import (
+    OmicsFileType,
+    ReadSetFileName,
+    ReferenceFileName,
+)
 from omics.transfer.config import TransferConfig
 from omics.transfer.manager import TransferManager
 from tests.transfer import (

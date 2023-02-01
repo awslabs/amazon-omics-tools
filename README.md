@@ -9,7 +9,7 @@ The `TransferManager` class makes it easy to download files for an Omics referen
 
 ```python
 import boto3
-from omics.transfer import ReferenceFileName, ReadSetFileName
+from omics.common.omics_file_types import ReadSetFileName, ReferenceFileName
 from omics.transfer.manager import TransferManager
 from omics.transfer.config import TransferConfig
 
@@ -76,7 +76,7 @@ manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>")
 
 ## Using the Omics URI Parser
 ### Basic Usage
-The `uri_parser` class makes it easy to parse omics readset and reference URIs to extract fields relevant for calling 
+The `OmicsUriParser` class makes it easy to parse omics readset and reference URIs to extract fields relevant for calling 
 AWS omics APIs.
 
 
@@ -103,8 +103,7 @@ omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/reference/534618
 
 ```python
 import boto3
-from omics.transfer import ReferenceFileName, ReadSetFileName
-from omics.uriparse.uri_parser import OmicsUriParser, OmicsUri, ReadSetUri, ReferenceUri
+from omics.uriparse.uri_parse import OmicsUriParser, OmicsUri
 
 READSET_URI_STRING = "omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/readSet/5346184667/source1"
 REFERENCE_URI_STRING = "omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/reference/5346184667/source"

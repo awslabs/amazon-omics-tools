@@ -7,7 +7,7 @@ from io import BytesIO
 from botocore.exceptions import ClientError
 from s3transfer.exceptions import RetriesExceededError
 
-from omics.transfer import OmicsFileType
+from omics.common.omics_file_types import OmicsFileType
 from omics.transfer.config import TransferConfig
 from omics.transfer.download import SOCKET_ERROR
 from omics.transfer.manager import TransferManager

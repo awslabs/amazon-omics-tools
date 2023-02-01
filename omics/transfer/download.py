@@ -22,7 +22,8 @@ from s3transfer.utils import (
     invoke_progress_callbacks,
 )
 
-from omics.transfer import FileTransfer, OmicsFileType
+from omics.common.omics_file_types import OmicsFileType
+from omics.transfer import FileTransfer
 from omics.transfer.config import TransferConfig
 
 logger = logging.getLogger(__name__)

@@ -5,12 +5,8 @@ from botocore.stub import Stubber
 from s3transfer.futures import BoundedExecutor, TransferCoordinator, TransferMeta
 from s3transfer.utils import OSUtils
 
-from omics.transfer import (
-    OmicsTransferFuture,
-    OmicsTransferSubscriber,
-    ReadSetFileName,
-    ReferenceFileName,
-)
+from omics.common.omics_file_types import ReadSetFileName, ReferenceFileName
+from omics.transfer import OmicsTransferFuture, OmicsTransferSubscriber
 from omics.transfer.config import TransferConfig
 
 TEST_CONSTANTS = {

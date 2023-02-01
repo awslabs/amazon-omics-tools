@@ -1,11 +1,7 @@
 import unittest
 
-from omics.transfer import (
-    ExtendedEnum,
-    FileTransfer,
-    FileTransferDirection,
-    OmicsFileType,
-)
+from omics.common.omics_file_types import ExtendedEnum, OmicsFileType
+from omics.transfer import FileTransfer, FileTransferDirection
 
 
 class NumberEnum(ExtendedEnum):

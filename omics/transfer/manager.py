@@ -19,14 +19,16 @@ from s3transfer.futures import (
 from s3transfer.manager import TransferCoordinatorController
 from s3transfer.utils import OSUtils, get_callbacks
 
+from omics.common.omics_file_types import (
+    OmicsFileType,
+    ReadSetFileName,
+    ReferenceFileName,
+)
 from omics.transfer import (
     FileTransfer,
     FileTransferDirection,
-    OmicsFileType,
     OmicsTransferFuture,
     OmicsTransferSubscriber,
-    ReadSetFileName,
-    ReferenceFileName,
 )
 from omics.transfer.config import TransferConfig
 from omics.transfer.download import (

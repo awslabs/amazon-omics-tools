@@ -11,12 +11,8 @@ from s3transfer.exceptions import RetriesExceededError
 from s3transfer.futures import BoundedExecutor, TransferMeta
 from s3transfer.utils import OSUtils
 
-from omics.transfer import (
-    FileTransfer,
-    FileTransferDirection,
-    OmicsFileType,
-    OmicsTransferFuture,
-)
+from omics.common.omics_file_types import OmicsFileType
+from omics.transfer import FileTransfer, FileTransferDirection, OmicsTransferFuture
 from omics.transfer.download import (
     SOCKET_ERROR,
     DownloadSubmissionTask,
