@@ -2,11 +2,11 @@
 
 from urllib.parse import urlparse
 
-from omics.common.omics_file_types import OmicsUriType, omicsUriType_to_FileNames
+from omics.common.omics_file_types import OMICS_URI_TYPE_FILENAME_MAP, OmicsFileType
 
 
 class OmicsUri:
-    """Class for representing an omics URIs.
+    """Class for representing an Omics URI.
 
     Supported format:
     omics://<AWS_ACCOUNT_ID>.storage.<AWS_REGION>.amazonaws.com/<REFERENCE_STORE_ID>/reference/<REFERENCE_ID>/source
@@ -43,12 +43,15 @@ class OmicsUri:
             *_,
         ) = self._uri_path.strip("/").split("/") + [self.DEFAULT_FILE_NAME, None]
 
-        if self.resource_type not in OmicsUriType.list():
+        if self.resource_type not in OmicsFileType.list():
             raise ValueError(
                 f"Invalid URI path for reference, {self.resource_type} is not a valid URI type"
             )
 
-        if self.file_name not in omicsUriType_to_FileNames[OmicsUriType(self.resource_type)].list():
+        if (
+            self.file_name
+            not in OMICS_URI_TYPE_FILENAME_MAP[OmicsFileType(self.resource_type)].list()
+        ):
             raise TypeError("URI file is unsupported.")
 
 
@@ -67,8 +70,8 @@ class OmicsUriParser:
     def parse(self):
         """Return an object of type OmicsUri, or exception if uri can't be parsed."""
         contains_valid_uri_type = False
-        for omicsUriType in OmicsUriType.list():
-            if omicsUriType in self._uri:
+        for omicsFileType in OmicsFileType.list():
+            if omicsFileType in self._uri:
                 contains_valid_uri_type = True
                 break
 

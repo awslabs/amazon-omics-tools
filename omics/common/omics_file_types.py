@@ -51,18 +51,11 @@ class ReferenceFileName(ExtendedEnum):
 class OmicsFileType(ExtendedEnum):
     """Available file types."""
 
-    READ_SET = "READ_SET"
-    REFERENCE = "REFERENCE"
-
-
-class OmicsUriType(ExtendedEnum):
-    """Available uri types."""
-
     READSET = "READSET"
     REFERENCE = "REFERENCE"
 
 
-omicsUriType_to_FileNames = {
-    OmicsUriType.READSET: ReadSetFileName,
-    OmicsUriType.REFERENCE: ReferenceFileName,
+OMICS_URI_TYPE_FILENAME_MAP = {
+    OmicsFileType.READSET: ReadSetFileName,
+    OmicsFileType.REFERENCE: ReferenceFileName,
 }

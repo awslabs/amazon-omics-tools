@@ -41,10 +41,10 @@ class BaseDownloadTest(StubbedClientTest):
     ):
         content = (
             TEST_CONSTANTS["content"]
-            if omics_file_type.READ_SET
+            if omics_file_type.READSET
             else TEST_CONSTANTS_REFERENCE_STORE["content"]
         )
-        method = "get_read_set" if omics_file_type.READ_SET else "get_reference"
+        method = "get_read_set" if omics_file_type.READSET else "get_reference"
 
         for _ in range(n):
             self.stubber.add_response(
@@ -61,7 +61,7 @@ class BaseDownloadTest(StubbedClientTest):
         add_get_read_set_responses(self.stubber)
 
         future = self.manager._download_file(
-            OmicsFileType.READ_SET,
+            OmicsFileType.READSET,
             TEST_CONSTANTS["sequence_store_id"],
             TEST_CONSTANTS["read_set_id"],
             TEST_CONSTANTS["file"],
@@ -79,7 +79,7 @@ class BaseDownloadTest(StubbedClientTest):
 
         with open(self.filename, "wb") as f:
             future = self.manager._download_file(
-                OmicsFileType.READ_SET,
+                OmicsFileType.READSET,
                 TEST_CONSTANTS["sequence_store_id"],
                 TEST_CONSTANTS["read_set_id"],
                 TEST_CONSTANTS["file"],
@@ -97,7 +97,7 @@ class BaseDownloadTest(StubbedClientTest):
         # Create a file-like object to test. In this case, it is a BytesIO object.
         bytes_io = BytesIO()
         future = self.manager._download_file(
-            OmicsFileType.READ_SET,
+            OmicsFileType.READSET,
             TEST_CONSTANTS["sequence_store_id"],
             TEST_CONSTANTS["read_set_id"],
             TEST_CONSTANTS["file"],
@@ -114,7 +114,7 @@ class BaseDownloadTest(StubbedClientTest):
         self.stubber.add_client_error("get_read_set")
 
         future = self.manager._download_file(
-            OmicsFileType.READ_SET,
+            OmicsFileType.READSET,
             TEST_CONSTANTS["sequence_store_id"],
             TEST_CONSTANTS["read_set_id"],
             TEST_CONSTANTS["file"],
@@ -134,7 +134,7 @@ class BaseDownloadTest(StubbedClientTest):
 
         fileobj = os.path.join(self.tempdir, "missing-directory", "test_file")
         future = self.manager._download_file(
-            OmicsFileType.READ_SET,
+            OmicsFileType.READSET,
             TEST_CONSTANTS["sequence_store_id"],
             TEST_CONSTANTS["read_set_id"],
             TEST_CONSTANTS["file"],
@@ -146,13 +146,13 @@ class BaseDownloadTest(StubbedClientTest):
     def test_download_file_retries_and_succeeds(self):
         add_get_read_set_metadata_response(self.stubber)
         # Insert a response that will trigger a retry.
-        self.add_n_retryable_download_file_responses(OmicsFileType.READ_SET, 1)
+        self.add_n_retryable_download_file_responses(OmicsFileType.READSET, 1)
         # Add the normal responses to simulate the download proceeding
         # as normal after the retry.
         add_get_read_set_responses(self.stubber)
 
         future = self.manager._download_file(
-            OmicsFileType.READ_SET,
+            OmicsFileType.READSET,
             TEST_CONSTANTS["sequence_store_id"],
             TEST_CONSTANTS["read_set_id"],
             TEST_CONSTANTS["file"],
@@ -171,11 +171,11 @@ class BaseDownloadTest(StubbedClientTest):
 
         # Add responses that fill up the maximum number of retries.
         self.add_n_retryable_download_file_responses(
-            OmicsFileType.READ_SET, self.config.num_download_attempts
+            OmicsFileType.READSET, self.config.num_download_attempts
         )
 
         future = self.manager._download_file(
-            OmicsFileType.READ_SET,
+            OmicsFileType.READSET,
             TEST_CONSTANTS["sequence_store_id"],
             TEST_CONSTANTS["read_set_id"],
             TEST_CONSTANTS["file"],
@@ -189,7 +189,7 @@ class BaseDownloadTest(StubbedClientTest):
     def test_download_file_retry_rewinds_callbacks(self):
         add_get_read_set_metadata_response(self.stubber)
         # Insert a response that will trigger a retry after one read of the stream has been made.
-        self.add_n_retryable_download_file_responses(OmicsFileType.READ_SET, 1, num_reads=1)
+        self.add_n_retryable_download_file_responses(OmicsFileType.READSET, 1, num_reads=1)
 
         # Add the normal responses to simulate the download proceeding
         # as normal after the retry.
@@ -204,7 +204,7 @@ class BaseDownloadTest(StubbedClientTest):
         self._manager = TransferManager(self.client, testConfig)
 
         future = self.manager._download_file(
-            OmicsFileType.READ_SET,
+            OmicsFileType.READSET,
             TEST_CONSTANTS["sequence_store_id"],
             TEST_CONSTANTS["read_set_id"],
             TEST_CONSTANTS["file"],

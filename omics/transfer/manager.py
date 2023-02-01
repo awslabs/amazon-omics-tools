@@ -326,7 +326,7 @@ class TransferManager:
             )
 
         return self._download_file(
-            OmicsFileType.READ_SET,
+            OmicsFileType.READSET,
             sequence_store_id,
             read_set_id,
             server_filename_enum.value,
