@@ -4,7 +4,11 @@ from concurrent.futures import CancelledError
 
 from s3transfer.exceptions import FatalError
 
-from omics.transfer import OmicsFileType, ReadSetFileName, ReferenceFileName
+from omics.common.omics_file_types import (
+    OmicsFileType,
+    ReadSetFileName,
+    ReferenceFileName,
+)
 from omics.transfer.config import TransferConfig
 from omics.transfer.manager import TransferManager
 from tests.transfer import (
@@ -48,7 +52,7 @@ class SingleThreadedTransferManagerTest(StubbedClientTest):
         return self._manager
 
     def add_default_stubber_responses(self, file_type: OmicsFileType):
-        if file_type == OmicsFileType.READ_SET:
+        if file_type == OmicsFileType.READSET:
             add_get_read_set_metadata_response(self.stubber, files=["source1", "source2"])
             add_get_read_set_metadata_response(self.stubber, files=["source1"])
             add_get_read_set_responses(self.stubber, file="SOURCE1")
@@ -62,7 +66,7 @@ class SingleThreadedTransferManagerTest(StubbedClientTest):
             add_get_reference_responses(self.stubber, file="INDEX")
 
     def test_download_read_set(self):
-        self.add_default_stubber_responses(OmicsFileType.READ_SET)
+        self.add_default_stubber_responses(OmicsFileType.READSET)
 
         self.manager.download_read_set(
             TEST_CONSTANTS["sequence_store_id"],
@@ -104,7 +108,7 @@ class SingleThreadedTransferManagerTest(StubbedClientTest):
         )
 
     def test_download_read_set_without_wait(self):
-        self.add_default_stubber_responses(OmicsFileType.READ_SET)
+        self.add_default_stubber_responses(OmicsFileType.READSET)
 
         futures = self.manager.download_read_set(
             TEST_CONSTANTS["sequence_store_id"],
@@ -128,7 +132,7 @@ class SingleThreadedTransferManagerTest(StubbedClientTest):
                 max_submission_concurrency=1,
             ),
         )
-        self.add_default_stubber_responses(OmicsFileType.READ_SET)
+        self.add_default_stubber_responses(OmicsFileType.READSET)
 
         self.manager.download_read_set(
             TEST_CONSTANTS["sequence_store_id"],
@@ -279,7 +283,7 @@ class MultiThreadedTransferManagerTest(StubbedClientTest):
                 for i in range(num_transfers):
                     futures.append(
                         self.manager._download_file(
-                            OmicsFileType.READ_SET,
+                            OmicsFileType.READSET,
                             TEST_CONSTANTS["sequence_store_id"],
                             TEST_CONSTANTS["read_set_id"],
                             TEST_CONSTANTS["file"],
@@ -306,7 +310,7 @@ class MultiThreadedTransferManagerTest(StubbedClientTest):
                 for i in range(num_transfers):
                     futures.append(
                         self.manager._download_file(
-                            OmicsFileType.READ_SET,
+                            OmicsFileType.READSET,
                             TEST_CONSTANTS["sequence_store_id"],
                             TEST_CONSTANTS["read_set_id"],
                             TEST_CONSTANTS["file"],

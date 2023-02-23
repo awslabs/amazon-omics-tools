@@ -9,7 +9,7 @@ The `TransferManager` class makes it easy to download files for an Omics referen
 
 ```python
 import boto3
-from omics.transfer import ReferenceFileName, ReadSetFileName
+from omics.common.omics_file_types import ReadSetFileName, ReferenceFileName
 from omics.transfer.manager import TransferManager
 from omics.transfer.config import TransferConfig
 
@@ -72,6 +72,64 @@ If thread use is disabled, transfer concurrency does not occur. Accordingly, the
 config = TransferConfig(use_threads=False)
 manager = TransferManager(client, config)
 manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>")
+```
+
+## Using the Omics URI Parser
+### Basic Usage
+The `OmicsUriParser` class makes it easy to parse omics readset and reference URIs to extract fields relevant for calling 
+AWS omics APIs.
+
+
+#### Readset file URI: 
+Readset file URIs come in the following format: 
+```
+omics://<AWS_ACCOUNT_ID>.storage.<AWS_REGION>.amazonaws.com/<SEQUENCE_STORE_ID>/readSet/<READSET_ID>/<SOURCE1/SOURCE2>
+```
+For example:
+```
+omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/readSet/5346184667/source1
+omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/readSet/5346184667/source2
+```
+
+#### Reference file URI:
+Reference file URIs come in the following format: 
+```
+omics://<AWS_ACCOUNT_ID>.storage.<AWS_REGION>.amazonaws.com/<REFERENCE_STORE_ID>/reference/<REFERENCE_ID>/source
+```
+For example:
+```
+omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/reference/5346184667/source
+```
+
+```python
+import boto3
+from omics.uriparse.uri_parse import OmicsUriParser, OmicsUri
+
+READSET_URI_STRING = "omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/readSet/5346184667/source1"
+REFERENCE_URI_STRING = "omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/reference/5346184667/source"
+
+client = boto3.client("omics")
+
+readset = OmicsUriParser(READSET_URI_STRING).parse()
+reference = OmicsUriParser(REFERENCE_URI_STRING).parse()
+
+# use the parsed fields from the URIs to call omics APIs:
+
+manager = TransferManager(client)
+
+# Download all files for a reference.
+manager.download_reference(reference.store_id, reference.resource_id)
+
+# Download all files for a read set to a custom directory.
+manager.download_read_set(readset.store_id, readset.resource_id, readset.file_name)
+
+# Download a specific read set file with a custom filename.
+manager.download_read_set_file(
+    readset.store_id,
+    readset.resource_id,
+    readset.file_name,
+    "my-sequence-data/read-set-index"
+)
 ```
 
 ## Security

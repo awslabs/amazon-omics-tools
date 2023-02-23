@@ -3,7 +3,7 @@ import tempfile
 
 from s3transfer.utils import OSUtils
 
-from omics.transfer import ReadSetFileName, ReferenceFileName
+from omics.common.omics_file_types import ReadSetFileName, ReferenceFileName
 from omics.transfer.manager import TransferManager, _format_local_filename
 from tests.transfer import (
     TEST_CONSTANTS,

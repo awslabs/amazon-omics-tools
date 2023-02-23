@@ -11,12 +11,8 @@ from s3transfer.exceptions import RetriesExceededError
 from s3transfer.futures import BoundedExecutor, TransferMeta
 from s3transfer.utils import OSUtils
 
-from omics.transfer import (
-    FileTransfer,
-    FileTransferDirection,
-    OmicsFileType,
-    OmicsTransferFuture,
-)
+from omics.common.omics_file_types import OmicsFileType
+from omics.transfer import FileTransfer, FileTransferDirection, OmicsTransferFuture
 from omics.transfer.download import (
     SOCKET_ERROR,
     DownloadSubmissionTask,
@@ -101,7 +97,7 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
         self.filename = os.path.join(self.tempdir, "test_file")
         self.subscribers = []
 
-        self.call_args = self.get_call_args(OmicsFileType.READ_SET)
+        self.call_args = self.get_call_args(OmicsFileType.READSET)
         self.transfer_future = self.get_transfer_future(self.call_args)
         self.omics_download_submission_task = DownloadSubmissionTask(self.transfer_coordinator)
 
@@ -131,7 +127,7 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
     def get_call_args(
         self, file_type: OmicsFileType, fileobj: Union[IO[Any], str] = None
     ) -> FileTransfer:
-        if file_type == OmicsFileType.READ_SET:
+        if file_type == OmicsFileType.READSET:
             store_id = TEST_CONSTANTS["sequence_store_id"]
             file_set_id = TEST_CONSTANTS["read_set_id"]
         elif file_type == OmicsFileType.REFERENCE:
@@ -181,7 +177,7 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
         self.submission_main_kwargs["request_executor"] = self.executor
 
     def use_fileobj_in_call_args(self, fileobj):
-        self.call_args = self.get_call_args(OmicsFileType.READ_SET, fileobj)
+        self.call_args = self.get_call_args(OmicsFileType.READSET, fileobj)
         self.transfer_future = self.get_transfer_future(self.call_args)
         self.submission_main_kwargs["transfer_future"] = self.transfer_future
 
@@ -227,7 +223,7 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
             file_set_id="mock-file-set-id",
             filename="nonexistent-file",
             fileobj="mock-fileobj",
-            omics_file_type=OmicsFileType.READ_SET,
+            omics_file_type=OmicsFileType.READSET,
         )
 
         transfer_future, submission_task = self.init_submission_task(call_args)
@@ -269,7 +265,7 @@ class TestGetFileTask(BaseTaskTest):
     def get_download_task(self, **kwargs):
         default_kwargs = {
             "client": self.client,
-            "omics_file_type": OmicsFileType.READ_SET,
+            "omics_file_type": OmicsFileType.READSET,
             "store_id": TEST_CONSTANTS["sequence_store_id"],
             "file_set_id": TEST_CONSTANTS["read_set_id"],
             "part_number": self.part_number,

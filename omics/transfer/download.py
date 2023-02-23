@@ -22,7 +22,8 @@ from s3transfer.utils import (
     invoke_progress_callbacks,
 )
 
-from omics.transfer import FileTransfer, OmicsFileType
+from omics.common.omics_file_types import OmicsFileType
+from omics.transfer import FileTransfer
 from omics.transfer.config import TransferConfig
 
 logger = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ class DownloadSubmissionTask(SubmissionTask):
                 referenceStoreId=transfer_args.store_id, id=transfer_args.file_set_id
             )
             metadata_files = metadata_response["files"]
-        elif transfer_args.omics_file_type == OmicsFileType.READ_SET:
+        elif transfer_args.omics_file_type == OmicsFileType.READSET:
             metadata_response = client.get_read_set_metadata(
                 sequenceStoreId=transfer_args.store_id, id=transfer_args.file_set_id
             )  # type: ignore
@@ -148,7 +149,7 @@ class GetFileTask(Task):
                         partNumber=part_number,
                         file=file,
                     )
-                elif omics_file_type == OmicsFileType.READ_SET:
+                elif omics_file_type == OmicsFileType.READSET:
                     response = client.get_read_set(
                         sequenceStoreId=store_id,
                         id=file_set_id,
