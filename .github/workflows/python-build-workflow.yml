@@ -25,12 +25,6 @@ jobs:
       - name: lint fix
         run: | 
          make lint-fix
-      - name: Run tests
+      - name: Run lint & tests
         run: | 
-         make test
-      - name: Run lint
-        run: | 
-          poetry run black --check omics tests
-          poetry run isort -c omics tests
-          poetry run flake8 omics tests
-          poetry run pip-audit
+         make ci
