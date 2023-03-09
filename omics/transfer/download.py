@@ -3,7 +3,7 @@ import logging
 import socket
 from typing import IO, Any, List, Union
 
-from botocore.exceptions import IncompleteReadError, ReadTimeoutError
+from botocore.exceptions import IncompleteReadError, ReadTimeoutError  # type: ignore
 from mypy_boto3_omics.client import OmicsClient
 from s3transfer.download import (
     DownloadChunkIterator,
