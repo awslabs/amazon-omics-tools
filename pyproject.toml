@@ -17,6 +17,7 @@ python = "^3.10"
 s3transfer = "^0.6.0"
 boto3 = "^1.26.19"
 mypy-boto3-omics = "^1.26.19"
+botocore-stubs = "^1.29.87"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"

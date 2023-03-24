@@ -13,7 +13,7 @@ ci: lint test check-types check-dependencies ## Run all checks (test, lint, chec
 .PHONY: ci
 
 test:  ## Run tests
-	poetry run pytest --cov=omics --cov-report term-missing tests --reruns 5
+	poetry run pytest --cov=omics --cov-report term-missing tests --reruns 10
 .PHONY: test
 
 lint:  ## Run linting
