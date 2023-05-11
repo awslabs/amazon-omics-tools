@@ -9,8 +9,8 @@ from s3transfer.exceptions import FatalError
 from omics.common.omics_file_types import (
     OmicsFileType,
     ReadSetFileName,
-    ReferenceFileName,
     ReadSetFileType,
+    ReferenceFileName,
 )
 from omics.transfer.config import TransferConfig
 from omics.transfer.manager import TransferManager
@@ -21,15 +21,15 @@ from tests.transfer import (
     StubbedClientTest,
 )
 from tests.transfer.functional import (
+    add_complete_upload_response,
+    add_create_upload_response,
     add_get_read_set_metadata_response,
     add_get_read_set_responses,
     add_get_reference_metadata_response,
     add_get_reference_responses,
     add_gzipped_get_read_set_metadata_response,
     add_gzipped_get_read_set_response,
-    add_create_upload_response,
     add_upload_part_response,
-    add_complete_upload_response,
 )
 
 

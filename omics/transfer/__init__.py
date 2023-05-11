@@ -1,9 +1,9 @@
-from typing import IO, Any, List, Union, Dict, Optional
+from typing import IO, Any, Dict, List, Optional, Union
 
 from s3transfer.futures import TransferFuture
 from s3transfer.subscribers import BaseSubscriber
 
-from omics.common.omics_file_types import ExtendedEnum, OmicsFileType, ReadSetFileType
+from omics.common.omics_file_types import OmicsFileType, ReadSetFileType
 
 
 class OmicsTransferSubscriber(BaseSubscriber):
@@ -71,7 +71,8 @@ class ReadSetUpload:
         tags: Optional[Dict[str, str]] = None,
         subscribers: Optional[List[BaseSubscriber]] = None,
     ):
-        """
+        """Details of a read set upload.
+
         :param store_id: The store ID
         :param file_type: The read set file type being uploaded
         :param name: The name of the read set

@@ -6,7 +6,7 @@ from io import BytesIO
 
 from botocore.stub import ANY
 
-from omics.common.omics_file_types import ReadSetFileName, ReadSetFileType
+from omics.common.omics_file_types import ReadSetFileName
 from tests.transfer import TEST_CONSTANTS, TEST_CONSTANTS_REFERENCE_STORE
 
 

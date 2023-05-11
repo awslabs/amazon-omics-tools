@@ -2,10 +2,10 @@ import logging
 import os
 import re
 from concurrent.futures import CancelledError
-from typing import IO, Any, List, Type, Union, Optional, Dict
+from typing import IO, Any, Dict, List, Optional, Type, Union
 
 from mypy_boto3_omics.client import OmicsClient
-from s3transfer.bandwidth import LeakyBucket, BandwidthLimiter
+from s3transfer.bandwidth import BandwidthLimiter, LeakyBucket
 from s3transfer.download import (
     DownloadNonSeekableOutputManager,
     DownloadOutputManager,
@@ -25,8 +25,8 @@ from s3transfer.utils import OSUtils, get_callbacks
 from omics.common.omics_file_types import (
     OmicsFileType,
     ReadSetFileName,
-    ReferenceFileName,
     ReadSetFileType,
+    ReferenceFileName,
 )
 from omics.transfer import (
     FileDownload,
@@ -364,7 +364,8 @@ class TransferManager:
         subscribers: Optional[List[OmicsTransferSubscriber]] = None,
         wait: bool = True,
     ) -> Union[TransferFuture, str]:
-        """
+        """Upload files and create a read set.
+
         :param fileobjs: One or two file-like objects to be uploaded as a read set
         :param sequence_store_id: ID of the Omics sequence store.
         :param file_type: The type of file being uploaded.
@@ -380,9 +381,8 @@ class TransferManager:
             False = return a futures for controlling how to wait.
         :return: The ID of the created read set or a future returning it.
         """
-
         # Always treat fileobjs as a list even if we only have a single file
-        fileobjs = fileobjs if type(fileobjs) is list else [fileobjs]
+        fileobjs = fileobjs if type(fileobjs) is list else [fileobjs]  # type: ignore
 
         if len(fileobjs) > 2:
             raise AttributeError("at most two files can be uploaded to a read set")

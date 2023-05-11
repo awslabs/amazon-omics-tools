@@ -5,7 +5,11 @@ import tempfile
 from s3transfer.futures import TransferFuture
 from s3transfer.utils import OSUtils
 
-from omics.common.omics_file_types import ReadSetFileName, ReferenceFileName, ReadSetFileType
+from omics.common.omics_file_types import (
+    ReadSetFileName,
+    ReadSetFileType,
+    ReferenceFileName,
+)
 from omics.transfer.manager import TransferManager, _format_local_filename
 from tests.transfer import (
     TEST_CONSTANTS,
@@ -13,14 +17,14 @@ from tests.transfer import (
     StubbedClientTest,
 )
 from tests.transfer.functional import (
+    add_abort_upload_response,
+    add_complete_upload_response,
+    add_create_upload_response,
     add_get_read_set_metadata_response,
     add_get_read_set_responses,
     add_get_reference_metadata_response,
     add_get_reference_responses,
-    add_create_upload_response,
-    add_complete_upload_response,
     add_upload_part_response,
-    add_abort_upload_response,
 )
 
 

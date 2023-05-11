@@ -1,17 +1,17 @@
 import logging
-from typing import IO, List, Awaitable, Optional, Dict, Any
+from typing import IO, Any, Awaitable, Dict, List, Optional
 
 from mypy_boto3_omics.client import OmicsClient
 from s3transfer.bandwidth import BandwidthLimiter
-from s3transfer.futures import BoundedExecutor, TransferFuture, IN_MEMORY_UPLOAD_TAG
+from s3transfer.futures import BoundedExecutor, TransferFuture
 from s3transfer.tasks import SubmissionTask, Task
 from s3transfer.upload import (
-    UploadInputManager,
     UploadFilenameInputManager,
-    UploadSeekableInputManager,
+    UploadInputManager,
     UploadNonSeekableInputManager,
+    UploadSeekableInputManager,
 )
-from s3transfer.utils import OSUtils, ChunksizeAdjuster
+from s3transfer.utils import ChunksizeAdjuster, OSUtils
 
 from omics.common.omics_file_types import ReadSetFileName
 from omics.transfer import ReadSetUpload
@@ -23,14 +23,15 @@ UPLOAD_PART_SIZE_BYTES = MIB_BYTES * 100  # 100MiB
 
 
 class CreateMultipartReadSetUploadTask(Task):
-    """Task to initiate a multipart upload"""
+    """Task to initiate a multipart upload."""
 
     def _main(
         self,
         client: OmicsClient,
         create_args: ReadSetUpload,
     ) -> str:
-        """
+        """Run the task.
+
         :param client: The client to use when calling CreateMultipartReadSetUpload
         :param create_args: The arguments to pass to the multipart upload request
         :returns: The upload ID.
@@ -63,7 +64,7 @@ class CreateMultipartReadSetUploadTask(Task):
 
 
 class UploadReadSetPartTask(Task):
-    """Task to upload a part in a multipart upload"""
+    """Task to upload a part in a multipart upload."""
 
     def _main(
         self,
@@ -74,7 +75,8 @@ class UploadReadSetPartTask(Task):
         part_source: str,
         part_number: int,
     ) -> Dict[str, Any]:
-        """
+        """Run the task.
+
         :param client: The client to use when calling UploadReadSetPart
         :param fileobj: The file to upload.
         :param upload_id: The id of the upload
@@ -99,7 +101,7 @@ class UploadReadSetPartTask(Task):
 
 
 class CompleteMultipartReadSetUploadTask(Task):
-    """Task to complete a multipart upload"""
+    """Task to complete a multipart upload."""
 
     def _main(
         self,
@@ -108,7 +110,8 @@ class CompleteMultipartReadSetUploadTask(Task):
         upload_id: str,
         parts: List[Dict[str, Any]],
     ) -> str:
-        """
+        """Run the task.
+
         :param client: The client to use when calling CompleteMultipartReadSetUpload
         :param sequence_store_id: The sequence store id
         :param upload_id: The id of the upload
@@ -127,7 +130,8 @@ class ReadSetUploadSubmissionTask(SubmissionTask):
     """Task for submitting tasks to execute an upload."""
 
     def _get_upload_input_manager_cls(self, fileobj: IO) -> type[UploadInputManager]:
-        """Retrieves a class for managing input for an upload based on file type
+        """Retrieve a class for managing input for an upload based on file type.
+
         :param fileobj: The file object being uploaded
         :returns: The appropriate class to use for managing a specific type of
             input for uploads.
@@ -152,7 +156,8 @@ class ReadSetUploadSubmissionTask(SubmissionTask):
         paired_transfer_future: Optional[TransferFuture],
         bandwidth_limiter: Optional[BandwidthLimiter] = None,
     ) -> None:
-        """
+        """Submit the task.
+
         :param client: The client associated with the transfer manager
         :param osutil: The os utility associated with the transfer manager
         :param request_executor: The request executor associated with the
@@ -164,7 +169,6 @@ class ReadSetUploadSubmissionTask(SubmissionTask):
         :param bandwidth_limiter: The bandwidth limiter to use for
             limiting bandwidth during the upload.
         """
-
         upload_args: ReadSetUpload = transfer_future.meta.call_args  # type: ignore
 
         # Submit the request to create a multipart upload.
@@ -181,7 +185,7 @@ class ReadSetUploadSubmissionTask(SubmissionTask):
 
         # Submit requests to upload the parts of the files.
         part_futures = []
-        for i, transfer_future in enumerate([transfer_future, paired_transfer_future]):
+        for i, transfer_future in enumerate([transfer_future, paired_transfer_future]):  # type: ignore
             if transfer_future is None:
                 continue
             part_futures.extend(
@@ -223,7 +227,8 @@ class ReadSetUploadSubmissionTask(SubmissionTask):
         part_source: ReadSetFileName,
         bandwidth_limiter: BandwidthLimiter = None,
     ):
-        """
+        """Submit the upload futures for each task.
+
         :param client: The client associated with the transfer manager
         :param osutil: The os utility associated with the transfer manager
         :param request_executor: The request executor associated with the
@@ -235,9 +240,8 @@ class ReadSetUploadSubmissionTask(SubmissionTask):
         :param bandwidth_limiter: The bandwidth limiter to use for
             limiting bandwidth during the upload.
         """
-
         # Get the relevant transfer data out of the transfer future
-        upload_args: ReadSetUpload = transfer_future.meta.call_args
+        upload_args: ReadSetUpload = transfer_future.meta.call_args  # type: ignore
         upload_input_manager = self._get_upload_input_manager_cls(upload_args.fileobj)(
             osutil, self._transfer_coordinator, bandwidth_limiter
         )
