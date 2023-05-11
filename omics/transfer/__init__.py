@@ -1,9 +1,9 @@
-from typing import IO, Any, List, Union
+from typing import IO, Any, Dict, List, Optional, Union
 
 from s3transfer.futures import TransferFuture
 from s3transfer.subscribers import BaseSubscriber
 
-from omics.common.omics_file_types import ExtendedEnum, OmicsFileType
+from omics.common.omics_file_types import OmicsFileType, ReadSetFileType
 
 
 class OmicsTransferSubscriber(BaseSubscriber):
@@ -14,15 +14,8 @@ class OmicsTransferFuture(TransferFuture):
     """Future for getting the result of Omics data transfer."""
 
 
-class FileTransferDirection(ExtendedEnum):
-    """Available transfer directions (UP = upload, DOWN = download)."""
-
-    UP = "UP"
-    DOWN = "DOWN"
-
-
-class FileTransfer:
-    """Details of an Omics file transfer."""
+class FileDownload:
+    """Details of an Omics file download."""
 
     def __init__(
         self,
@@ -31,7 +24,6 @@ class FileTransfer:
         filename: str,
         fileobj: Union[IO[Any], str],
         omics_file_type: OmicsFileType,
-        direction: FileTransferDirection = FileTransferDirection.DOWN,
         subscribers: List[BaseSubscriber] = None,
     ):
         """Details of a file download.
@@ -41,21 +33,16 @@ class FileTransfer:
 
             file_set_id: Reference ID or Read Set ID.
 
-            filename: the name of the file when it it stored on the server.
+            filename: the name of the file when it is stored on the server.
 
             fileobj: The name of a file or IO object to transfer data to.
 
             omics_file_type: the type of Omics file being transferred.
 
-            orig_filename: The original name of the data file (ex: "NA12878.cram")
-
-            direction: currently only DOWN (download) is supported.
-
             subscribers: The list of subscribers to be invoked in the
                 order provided based on the event emit during the process of
                 the transfer request.
         """
-        self.direction = direction
         self.omics_file_type = omics_file_type
         self.store_id = store_id
         self.file_set_id = file_set_id
@@ -65,5 +52,49 @@ class FileTransfer:
 
         if filename is None:
             raise AttributeError("filename cannot be None")
-        if direction != FileTransferDirection.DOWN:
-            raise AttributeError("Only download is currently supported (direction = DOWN)")
+
+
+class ReadSetUpload:
+    """Details of an Omics read set upload."""
+
+    def __init__(
+        self,
+        store_id: str,
+        file_type: ReadSetFileType,
+        name: str,
+        subject_id: str,
+        sample_id: str,
+        reference_arn: str,
+        fileobj: Union[IO[Any], str],
+        generated_from: Optional[str] = None,
+        description: Optional[str] = None,
+        tags: Optional[Dict[str, str]] = None,
+        subscribers: Optional[List[BaseSubscriber]] = None,
+    ):
+        """Details of a read set upload.
+
+        :param store_id: The store ID
+        :param file_type: The read set file type being uploaded
+        :param name: The name of the read set
+        :param subject_id: The subject for the read set
+        :param sample_id: The sample for the read set
+        :param reference_arn: The reference ARN
+        :param fileobj: The file being uploaded
+        :param generated_from: Where the file was generated from
+        :param description: The description of the read set
+        :param tags: Tags to add to the read set
+        :param subscribers: The list of subscribers to be invoked in the
+                order provided based on the event emit during the process of
+                the transfer request.
+        """
+        self.store_id = store_id
+        self.file_type = file_type
+        self.name = name
+        self.subject_id = subject_id
+        self.sample_id = sample_id
+        self.reference_arn = reference_arn
+        self.fileobj = fileobj
+        self.generated_from = generated_from
+        self.description = description
+        self.tags = tags
+        self.subscribers = [] if subscribers is None else subscribers

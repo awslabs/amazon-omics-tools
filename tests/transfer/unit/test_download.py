@@ -12,7 +12,7 @@ from s3transfer.futures import BoundedExecutor, TransferMeta
 from s3transfer.utils import OSUtils
 
 from omics.common.omics_file_types import OmicsFileType
-from omics.transfer import FileTransfer, FileTransferDirection, OmicsTransferFuture
+from omics.transfer import FileDownload, OmicsTransferFuture
 from omics.transfer.download import (
     SOCKET_ERROR,
     DownloadSubmissionTask,
@@ -106,7 +106,6 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
             self.osutil, self.transfer_coordinator, self.io_executor
         )
 
-        self.io_executor = BoundedExecutor(1000, 1)
         self.submission_main_kwargs = {
             "transfer_future": self.transfer_future,
             "client": self.client,
@@ -126,7 +125,7 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
 
     def get_call_args(
         self, file_type: OmicsFileType, fileobj: Union[IO[Any], str] = None
-    ) -> FileTransfer:
+    ) -> FileDownload:
         if file_type == OmicsFileType.READSET:
             store_id = TEST_CONSTANTS["sequence_store_id"]
             file_set_id = TEST_CONSTANTS["read_set_id"]
@@ -138,18 +137,17 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
             # The default fileobj is the test filename
             fileobj = self.filename
 
-        return FileTransfer(
+        return FileDownload(
             store_id=store_id,
             file_set_id=file_set_id,
             filename=TEST_CONSTANTS["file"],
             fileobj=fileobj,
             omics_file_type=file_type,
-            direction=FileTransferDirection.DOWN,
             subscribers=self.subscribers,
         )
 
     def init_submission_task(
-        self, call_args: FileTransfer
+        self, call_args: FileDownload
     ) -> Tuple[OmicsTransferFuture, DownloadSubmissionTask]:
         transfer_future = OmicsTransferFuture(
             meta=TransferMeta(call_args), coordinator=self.transfer_coordinator
@@ -218,7 +216,7 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
 
     def test_submit_with_nonexistent_file(self):
         add_get_read_set_metadata_response(self.stubber)
-        call_args = FileTransfer(
+        call_args = FileDownload(
             store_id="mock-store-id",
             file_set_id="mock-file-set-id",
             filename="nonexistent-file",
@@ -232,7 +230,7 @@ class TestDownloadSubmissionTask(BaseSubmissionTaskTest):
             transfer_future.result()
 
     def test_submit_with_invalid_file_type(self):
-        call_args = FileTransfer(
+        call_args = FileDownload(
             store_id="mock-store-id",
             file_set_id="mock-file-set-id",
             filename=TEST_CONSTANTS["file"],

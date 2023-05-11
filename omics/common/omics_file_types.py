@@ -59,3 +59,11 @@ OMICS_URI_TYPE_FILENAME_MAP = {
     OmicsFileType.READSET: ReadSetFileName,
     OmicsFileType.REFERENCE: ReferenceFileName,
 }
+
+
+class ReadSetFileType(ExtendedEnum):
+    """Available read set file types."""
+
+    FASTQ = "FASTQ"
+    BAM = "BAM"
+    CRAM = "CRAM"

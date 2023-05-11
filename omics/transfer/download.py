@@ -23,7 +23,7 @@ from s3transfer.utils import (
 )
 
 from omics.common.omics_file_types import OmicsFileType
-from omics.transfer import FileTransfer
+from omics.transfer import FileDownload
 from omics.transfer.config import TransferConfig
 
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ class DownloadSubmissionTask(SubmissionTask):
         # Get a handle to the file that will be used for writing downloaded contents
         fileobj = download_manager.get_fileobj_for_io_writes(transfer_future)
 
-        transfer_args: FileTransfer = transfer_future.meta.call_args  # type: ignore
+        transfer_args: FileDownload = transfer_future.meta.call_args  # type: ignore
 
         if transfer_args.omics_file_type == OmicsFileType.REFERENCE:
             metadata_response = client.get_reference_metadata(

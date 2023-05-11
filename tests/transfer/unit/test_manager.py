@@ -1,9 +1,15 @@
+import io
 import os
 import tempfile
 
+from s3transfer.futures import TransferFuture
 from s3transfer.utils import OSUtils
 
-from omics.common.omics_file_types import ReadSetFileName, ReferenceFileName
+from omics.common.omics_file_types import (
+    ReadSetFileName,
+    ReadSetFileType,
+    ReferenceFileName,
+)
 from omics.transfer.manager import TransferManager, _format_local_filename
 from tests.transfer import (
     TEST_CONSTANTS,
@@ -11,10 +17,14 @@ from tests.transfer import (
     StubbedClientTest,
 )
 from tests.transfer.functional import (
+    add_abort_upload_response,
+    add_complete_upload_response,
+    add_create_upload_response,
     add_get_read_set_metadata_response,
     add_get_read_set_responses,
     add_get_reference_metadata_response,
     add_get_reference_responses,
+    add_upload_part_response,
 )
 
 
@@ -143,3 +153,59 @@ class TestTransferManager(StubbedClientTest):
             "test-filename.FASTQ.GZ", ReadSetFileName.SOURCE1, "CRAM", True
         )
         self.assertEqual(filename, "test-filename_1.cram")
+
+    def test_upload_single_file(self):
+        add_create_upload_response(self.stubber)
+        add_upload_part_response(self.stubber, 1, ReadSetFileName.SOURCE1)
+        add_complete_upload_response(self.stubber)
+
+        read_set_id = self.run_simple_upload(io.BytesIO(b"some file content1"))
+
+        self.assertEqual(read_set_id, TEST_CONSTANTS["read_set_id"])
+        self.stubber.assert_no_pending_responses()
+
+    def test_upload_multiple_files(self):
+        add_create_upload_response(self.stubber)
+        add_upload_part_response(self.stubber, 1, ReadSetFileName.SOURCE1)
+        add_upload_part_response(self.stubber, 1, ReadSetFileName.SOURCE2)
+        add_complete_upload_response(self.stubber)
+
+        read_set_id = self.run_simple_upload([io.BytesIO(b"content1"), io.BytesIO(b"content2")])
+
+        self.assertEqual(read_set_id, TEST_CONSTANTS["read_set_id"])
+        self.stubber.assert_no_pending_responses()
+
+    def test_upload_bad_file_throws_exception(self):
+        add_create_upload_response(self.stubber)
+        add_abort_upload_response(self.stubber)
+
+        with self.assertRaises(RuntimeError):
+            self.run_simple_upload(b"some file content1").result()
+        self.stubber.assert_no_pending_responses()
+
+    def test_upload_too_many_files_throws_exception(self):
+        with self.assertRaises(AttributeError):
+            self.run_simple_upload(
+                [io.BytesIO(b"content1"), io.BytesIO(b"content2"), io.BytesIO(b"content3")]
+            ).result()
+        self.stubber.assert_no_pending_responses()
+
+    def test_upload_paired_with_wrong_file_type_throws_exception(self):
+        with self.assertRaises(AttributeError):
+            self.run_simple_upload(
+                [io.BytesIO(b"content1"), io.BytesIO(b"content2")], ReadSetFileType.BAM
+            ).result()
+        self.stubber.assert_no_pending_responses()
+
+    def run_simple_upload(
+        self, files: any, file_type: ReadSetFileType = ReadSetFileType.FASTQ
+    ) -> TransferFuture:
+        return self.transfer_manager.upload_read_set(
+            files,
+            TEST_CONSTANTS["sequence_store_id"],
+            file_type,
+            "name",
+            "subjectId",
+            "sampleId",
+            "referenceArn",
+        )

@@ -15,6 +15,7 @@ class TransferConfig:
         max_io_queue_size: int = 1000,
         io_chunksize: int = 256 * KB,
         num_download_attempts: int = 5,
+        max_bandwidth: int = None,
     ):
         """Create a Transfer Manager configuration.
 
@@ -57,6 +58,10 @@ class TransferConfig:
                 are already retried by botocore (this default is 5). The
                 ``num_download_attempts`` does not take into account the
                 number of exceptions retried by botocore.
+
+            max_bandwidth: The maximum bandwidth that will be consumed
+                in uploading and downloading file content. The value is in terms of
+                bytes per second.
         """
         self.use_threads = use_threads
         self.directory = directory
@@ -67,6 +72,7 @@ class TransferConfig:
         self.max_io_queue_size = max_io_queue_size
         self.io_chunksize = io_chunksize
         self.num_download_attempts = num_download_attempts
+        self.max_bandwidth = max_bandwidth
         self._validate_attrs_are_nonzero()
 
     def _validate_attrs_are_nonzero(self) -> None:

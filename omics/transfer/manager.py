@@ -1,9 +1,11 @@
+import logging
 import os
 import re
 from concurrent.futures import CancelledError
-from typing import IO, Any, List, Type, Union
+from typing import IO, Any, Dict, List, Optional, Type, Union
 
 from mypy_boto3_omics.client import OmicsClient
+from s3transfer.bandwidth import BandwidthLimiter, LeakyBucket
 from s3transfer.download import (
     DownloadNonSeekableOutputManager,
     DownloadOutputManager,
@@ -14,6 +16,7 @@ from s3transfer.futures import (
     BoundedExecutor,
     NonThreadedExecutor,
     TransferCoordinator,
+    TransferFuture,
     TransferMeta,
 )
 from s3transfer.manager import TransferCoordinatorController
@@ -22,19 +25,21 @@ from s3transfer.utils import OSUtils, get_callbacks
 from omics.common.omics_file_types import (
     OmicsFileType,
     ReadSetFileName,
+    ReadSetFileType,
     ReferenceFileName,
 )
 from omics.transfer import (
-    FileTransfer,
-    FileTransferDirection,
+    FileDownload,
     OmicsTransferFuture,
     OmicsTransferSubscriber,
+    ReadSetUpload,
 )
 from omics.transfer.config import TransferConfig
 from omics.transfer.download import (
     DownloadSubmissionTask,
     OmicsDownloadFilenameOutputManager,
 )
+from omics.transfer.read_set_upload import ReadSetUploadSubmissionTask
 
 DONE_CALLBACK_TYPE: str = "done"
 
@@ -55,6 +60,8 @@ FILE_TYPE_INDEX_EXTENSION_MAP: dict[str, str] = {
     "BAM": "bam.bai",
     "CRAM": "cram.crai",
 }
+
+logger = logging.getLogger(__name__)
 
 
 class TransferManager:
@@ -107,6 +114,13 @@ class TransferManager:
             max_num_threads=1,
             executor_cls=executor_cls,
         )
+
+        # The component responsible for limiting bandwidth usage if it is configured.
+        self._bandwidth_limiter = None
+        if self._config.max_bandwidth is not None:
+            logger.debug(f"Setting max_bandwidth to {self._config.max_bandwidth}")
+            leaky_bucket = LeakyBucket(self._config.max_bandwidth)
+            self._bandwidth_limiter = BandwidthLimiter(leaky_bucket)
 
     def download_reference(
         self,
@@ -335,6 +349,106 @@ class TransferManager:
             wait,
         )
 
+    def upload_read_set(
+        self,
+        fileobjs: Union[IO[Any], str, List[Union[IO[Any], str]]],
+        sequence_store_id: str,
+        file_type: ReadSetFileType,
+        name: str,
+        subject_id: str,
+        sample_id: str,
+        reference_arn: str,
+        generated_from: Optional[str] = None,
+        description: Optional[str] = None,
+        tags: Optional[Dict[str, str]] = None,
+        subscribers: Optional[List[OmicsTransferSubscriber]] = None,
+        wait: bool = True,
+    ) -> Union[TransferFuture, str]:
+        """Upload files and create a read set.
+
+        :param fileobjs: One or two file-like objects to be uploaded as a read set
+        :param sequence_store_id: ID of the Omics sequence store.
+        :param file_type: The type of file being uploaded.
+        :param name: The name of the read set.
+        :param subject_id: The subject ID for the read set.
+        :param sample_id: The sample ID for the read set.
+        :param reference_arn: The reference ARN.
+        :param generated_from: Where the file was generated from.
+        :param description: The description of the read set.
+        :param tags: Tags to assign to the read set.
+        :param subscribers: One or more subscribers for receiving transfer events.
+        :param wait: True = block until all files have been uploaded (default).
+            False = return a futures for controlling how to wait.
+        :return: The ID of the created read set or a future returning it.
+        """
+        # Always treat fileobjs as a list even if we only have a single file
+        fileobjs = fileobjs if type(fileobjs) is list else [fileobjs]  # type: ignore
+
+        if len(fileobjs) > 2:
+            raise AttributeError("at most two files can be uploaded to a read set")
+
+        if len(fileobjs) > 1 and file_type is not ReadSetFileType.FASTQ:
+            raise AttributeError("paired end read files only supported for FASTQ")
+
+        transfer_coordinator = self._get_future_coordinator()
+        transfer_futures = []
+        for fileobj in fileobjs:
+            upload_args = ReadSetUpload(
+                store_id=sequence_store_id,
+                file_type=file_type,
+                name=name,
+                subject_id=subject_id,
+                sample_id=sample_id,
+                reference_arn=reference_arn,
+                fileobj=fileobj,
+                generated_from=generated_from,
+                description=description,
+                tags=tags,
+                subscribers=subscribers,
+            )
+
+            transfer_meta = TransferMeta(upload_args, transfer_coordinator.transfer_id)
+            transfer_futures.append(OmicsTransferFuture(transfer_meta, transfer_coordinator))
+
+        transfer_future = transfer_futures[0]
+        paired_transfer_future = None if len(transfer_futures) < 2 else transfer_futures[1]
+
+        # Add any provided done callbacks to the first created transfer future
+        # to be invoked on the entire upload being complete.
+        for callback in get_callbacks(transfer_future, DONE_CALLBACK_TYPE):
+            transfer_coordinator.add_done_callback(callback)
+
+        # Return the upload task so that users can await the read set ID it creates
+        self._submission_executor.submit(
+            ReadSetUploadSubmissionTask(
+                transfer_coordinator=transfer_coordinator,
+                main_kwargs={
+                    "client": self._client,
+                    "osutil": self._osutil,
+                    "request_executor": self._request_executor,
+                    "transfer_future": transfer_future,
+                    "paired_transfer_future": paired_transfer_future,
+                    "bandwidth_limiter": self._bandwidth_limiter,
+                },
+            )
+        )
+
+        return transfer_future if not wait else transfer_future.result()
+
+    def _get_future_coordinator(self) -> TransferCoordinator:
+        transfer_id = self._get_next_transfer_id()
+        # Creates a new transfer future along with its components
+        transfer_coordinator = TransferCoordinator(transfer_id=transfer_id)
+        # Track the transfer coordinator for transfers to manage.
+        self._coordinator_controller.add_transfer_coordinator(transfer_coordinator)
+        # Also make sure that the transfer coordinator is removed once
+        # the transfer completes so it does not stick around in memory.
+        transfer_coordinator.add_done_callback(
+            self._coordinator_controller.remove_transfer_coordinator,
+            transfer_coordinator,
+        )
+        return transfer_coordinator
+
     def _download_file(
         self,
         omics_file_type: OmicsFileType,
@@ -346,19 +460,10 @@ class TransferManager:
         wait: bool = False,
     ) -> OmicsTransferFuture:
         """Private helper method for downloading a file."""
-        transfer_id = self._get_next_transfer_id()
-        transfer_coordinator = TransferCoordinator(transfer_id=transfer_id)
-
-        # Also make sure that the transfer coordinator is removed once
-        # the transfer completes so it does not stick around in memory.
-        transfer_coordinator.add_done_callback(
-            self._coordinator_controller.remove_transfer_coordinator,
-            transfer_coordinator,
-        )
-
         if client_fileobj is None:
             raise ValueError("client_fileobj parameter is required")
 
+        transfer_coordinator = self._get_future_coordinator()
         if OmicsDownloadFilenameOutputManager.is_compatible(client_fileobj, self._osutil):
             download_manager: DownloadOutputManager = OmicsDownloadFilenameOutputManager(
                 self._osutil, transfer_coordinator, self._io_executor
@@ -374,26 +479,21 @@ class TransferManager:
         else:
             raise ValueError(f"The client_fileobj (type: {type(client_fileobj)}) is not supported")
 
-        file_transfer = FileTransfer(
+        file_transfer = FileDownload(
             store_id=store_id,
             file_set_id=file_set_id,
             filename=server_filename,
             fileobj=client_fileobj,
             subscribers=subscribers,
-            direction=FileTransferDirection.DOWN,
             omics_file_type=omics_file_type,
         )
-
-        transfer_meta = TransferMeta(file_transfer, transfer_id=transfer_id)
+        transfer_meta = TransferMeta(file_transfer, transfer_coordinator.transfer_id)
         transfer_future = OmicsTransferFuture(transfer_meta, transfer_coordinator)
 
         # Add any provided done callbacks to the created transfer future
         # to be invoked on the transfer future being complete.
         for callback in get_callbacks(transfer_future, DONE_CALLBACK_TYPE):
             transfer_coordinator.add_done_callback(callback)
-
-        # Track the transfer coordinator for transfers to manage.
-        self._coordinator_controller.add_transfer_coordinator(transfer_coordinator)
 
         main_kwargs = {
             "client": self._client,
@@ -430,7 +530,7 @@ class TransferManager:
         cancel = False
         cancel_msg = ""
         cancel_exc_type: Type[BaseException] = FatalError
-        # If a exception was raised in the context handler, signal to cancel
+        # If an exception was raised in the context handler, signal to cancel
         # all of the in progress futures in the shutdown.
         if exc_type:
             cancel = True
