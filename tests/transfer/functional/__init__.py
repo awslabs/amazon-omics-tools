@@ -1,10 +1,12 @@
 import copy
+import datetime
 import gzip
 import io
 from io import BytesIO
 
 from botocore.stub import ANY
 
+from omics.common.omics_file_types import ReadSetFileName, ReadSetFileType
 from tests.transfer import TEST_CONSTANTS, TEST_CONSTANTS_REFERENCE_STORE
 
 
@@ -162,3 +164,64 @@ def create_download_reference_call_kwargs(filename):
         "reference_id": TEST_CONSTANTS_REFERENCE_STORE["reference_id"],
         "fileobj": filename,
     }
+
+
+def add_create_upload_response(stubber):
+    stubber.add_response(
+        "create_multipart_read_set_upload",
+        service_response={
+            "uploadId": TEST_CONSTANTS["upload_id"],
+            "sequenceStoreId": TEST_CONSTANTS["sequence_store_id"],
+            "sourceFileType": "ANY",
+            "subjectId": "ANY",
+            "sampleId": "ANY",
+            "referenceArn": "ANY",
+            "name": "ANY",
+            "creationTime": datetime.datetime.now(),
+        },
+        expected_params={
+            "sequenceStoreId": TEST_CONSTANTS["sequence_store_id"],
+            "sourceFileType": ANY,
+            "subjectId": ANY,
+            "sampleId": ANY,
+            "referenceArn": ANY,
+            "name": ANY,
+        },
+    )
+
+
+def add_upload_part_response(stubber, part_number: int, part_source: ReadSetFileName):
+    stubber.add_response(
+        "upload_read_set_part",
+        service_response={"checksum": TEST_CONSTANTS["checksum"]},
+        expected_params={
+            "sequenceStoreId": TEST_CONSTANTS["sequence_store_id"],
+            "uploadId": TEST_CONSTANTS["upload_id"],
+            "partNumber": part_number,
+            "partSource": part_source.value,
+            "payload": ANY,
+        },
+    )
+
+
+def add_abort_upload_response(stubber):
+    stubber.add_response(
+        "abort_multipart_read_set_upload",
+        service_response={},
+        expected_params={
+            "sequenceStoreId": TEST_CONSTANTS["sequence_store_id"],
+            "uploadId": TEST_CONSTANTS["upload_id"],
+        },
+    )
+
+
+def add_complete_upload_response(stubber):
+    stubber.add_response(
+        "complete_multipart_read_set_upload",
+        service_response={"readSetId": TEST_CONSTANTS["read_set_id"]},
+        expected_params={
+            "sequenceStoreId": TEST_CONSTANTS["sequence_store_id"],
+            "uploadId": TEST_CONSTANTS["upload_id"],
+            "parts": ANY,
+        },
+    )

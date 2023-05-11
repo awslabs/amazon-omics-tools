@@ -9,7 +9,7 @@ The `TransferManager` class makes it easy to download files for an Omics referen
 
 ```python
 import boto3
-from omics.common.omics_file_types import ReadSetFileName, ReferenceFileName
+from omics.common.omics_file_types import ReadSetFileName, ReferenceFileName, ReadSetFileType
 from omics.transfer.manager import TransferManager
 from omics.transfer.config import TransferConfig
 
@@ -44,6 +44,35 @@ manager.download_read_set_file(
     "<my-read-set-id>",
     ReadSetFileName.INDEX,
     "my-sequence-data/read-set-index"
+)
+```
+
+### Upload specific files
+Specific files can be uploaded via the `upload_read_set` method.
+The `fileobjs` parameter can be either the name of a local file, or a `TextIO` or `BinaryIO` object that supports read methods.
+For paired end reads, you can define `fileobjs` as a list of files.
+
+```python
+# Upload a specific read set file.
+read_set_id = manager.upload_read_set(
+    "my-sequence-data/read-set-file.bam",
+    SEQUENCE_STORE_ID,
+    ReadSetFileType.BAM,
+    "name",
+    "subject-id",
+    "sample-id",
+    "<my-reference-arn>",
+)
+
+# Upload paired end read set files.
+read_set_id = manager.upload_read_set(
+    ["my-sequence-data/read-set-file_1.fastq.gz", "my-sequence-data/read-set-file_2.fastq.gz"],
+    SEQUENCE_STORE_ID,
+    ReadSetFileType.FASTQ,
+    "name",
+    "subject-id",
+    "sample-id",
+    "<my-reference-arn>",
 )
 ```
 

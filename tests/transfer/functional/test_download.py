@@ -200,8 +200,8 @@ class BaseDownloadTest(StubbedClientTest):
         # currently provide to it to simulate rewinds of callbacks.
         self.config.io_chunksize = 1
 
-        testConfig = TransferConfig(max_request_concurrency=1, io_chunksize=1)
-        self._manager = TransferManager(self.client, testConfig)
+        test_config = TransferConfig(max_request_concurrency=1, io_chunksize=1)
+        self._manager = TransferManager(self.client, test_config)
 
         future = self.manager._download_file(
             OmicsFileType.READSET,

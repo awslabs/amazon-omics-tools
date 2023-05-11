@@ -16,6 +16,8 @@ TEST_CONSTANTS = {
     "file": ReadSetFileName.SOURCE1.value,
     "part_size": 2,
     "total_parts": 8,
+    "upload_id": "1122334455",
+    "checksum": "9148dbee794a35de51bdc6f404c4b36ac0e4d25ccd9d5a857132312c4c770540",
 }
 
 TEST_CONSTANTS_REFERENCE_STORE = {
