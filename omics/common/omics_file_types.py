@@ -61,6 +61,12 @@ OMICS_URI_TYPE_FILENAME_MAP = {
 }
 
 
+OMICS_URI_TYPE_DEFAULT_FILENAME_MAP = {
+    OmicsFileType.READSET: ReadSetFileName.SOURCE1,
+    OmicsFileType.REFERENCE: ReferenceFileName.SOURCE,
+}
+
+
 class ReadSetFileType(ExtendedEnum):
     """Available read set file types."""
 

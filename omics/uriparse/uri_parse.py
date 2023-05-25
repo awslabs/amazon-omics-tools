@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from urllib.parse import urlparse
+import re
 
-from omics.common.omics_file_types import OMICS_URI_TYPE_FILENAME_MAP, OmicsFileType
+from omics.common.omics_file_types import OMICS_URI_TYPE_FILENAME_MAP, OMICS_URI_TYPE_DEFAULT_FILENAME_MAP, OmicsFileType
 
 
 class OmicsUri:
@@ -14,10 +14,7 @@ class OmicsUri:
     ex: omics://429915189008.storage.us-east-1.amazonaws.com/1981413158/readSet/5346184667/source1
     ex: omics://429915189008.storage.us-east-1.amazonaws.com/1981413158/reference/5346184667/source
     """
-
-    SCHEME = "omics"
-    NETLOC = "STORAGE"
-    DEFAULT_FILE_NAME = None
+    URI_REGEX = r"omics://(\d{10,12})\.storage\.([a-z]{2}-[a-z-]{4,}-\d+)\.amazonaws\.com/(\d{10,36})/(readSet|reference)/(\d{10,36})(/(source[12]?|index))?$"
 
     def __init__(self, omics_uri):
         """Initialize an Omics URI.
@@ -25,34 +22,22 @@ class OmicsUri:
         Args:
             omics_uri: String representing an omics URI.
         """
-        # https://docs.python.org/3/library/urllib.parse.html
-        url_parts = urlparse(omics_uri.upper())
-        if url_parts.scheme != self.SCHEME:
-            raise ValueError(f"Invalid URI scheme, expected {self.SCHEME}")
-
-        if self.NETLOC not in url_parts.netloc:
-            raise ValueError(f"Invalid URI netloc, expected {self.NETLOC}")
-
-        self._uri_path = url_parts.path
-
-        (
-            self.store_id,
-            self.resource_type,
-            self.resource_id,
-            self.file_name,
-            *_,
-        ) = self._uri_path.strip("/").split("/") + [self.DEFAULT_FILE_NAME, None]
-
-        if self.resource_type not in OmicsFileType.list():
-            raise ValueError(
-                f"Invalid URI path for reference, {self.resource_type} is not a valid URI type"
-            )
-
-        if (
-            self.file_name
-            not in OMICS_URI_TYPE_FILENAME_MAP[OmicsFileType(self.resource_type)].list()
-        ):
-            raise TypeError("URI file is unsupported.")
+        uri_match = re.match(self.URI_REGEX, omics_uri, re.IGNORECASE)
+        if not uri_match:
+            raise ValueError(f"Invalid URI format: {omics_uri}")
+        self.account_id = uri_match.group(1)
+        self.region = uri_match.group(2).lower()
+        self.store_id = uri_match.group(3)
+        self.resource_type = uri_match.group(4).upper()
+        self.resource_id = uri_match.group(5)
+        file_name = (uri_match.group(7) or "").upper()
+        file_type = OmicsFileType(self.resource_type)
+        if not file_name:
+            self.file_name = OMICS_URI_TYPE_DEFAULT_FILENAME_MAP[file_type].value
+        elif file_name in OMICS_URI_TYPE_FILENAME_MAP[file_type].list():
+            self.file_name = file_name
+        else:
+            raise ValueError(f"Invalid URI file: {file_name}")
 
 
 class OmicsUriParser:
@@ -65,17 +50,8 @@ class OmicsUriParser:
         :type uri: str
         :param uri: URI to parse
         """
-        self._uri = uri.upper()
+        self._uri = uri
 
     def parse(self):
         """Return an object of type OmicsUri, or exception if uri can't be parsed."""
-        contains_valid_uri_type = False
-        for omicsFileType in OmicsFileType.list():
-            if omicsFileType in self._uri:
-                contains_valid_uri_type = True
-                break
-
-        if contains_valid_uri_type:
-            return OmicsUri(self._uri)
-        else:
-            raise ValueError(f"Invalid URI: {self._uri}")
+        return OmicsUri(self._uri)
