@@ -161,6 +161,87 @@ manager.download_read_set_file(
 )
 ```
 
+## Using the Omics Rerun tool
+### Basic Usage
+The `omics-rerun` tool makes it easy to start a new run execution from a CloudWatch Logs manifest.
+
+#### List runs from manifest
+The following example lists all workflow run ids which were completed on July 1st (UTC time):
+```txt
+> omics-rerun -s 2023-07-01T00:00:00 -e 2023-07-02T00:00:00
+1234567 (2023-07-01T12:00:00.000)
+2345678 (2023-07-01T13:00:00.000)
+```
+
+#### Rerun a previously-executed run
+To rerun a previously-executed run, specify the run id you would like to rerun:
+
+```txt
+> omics-rerun 1234567
+StartRun request:
+{
+  "workflowId": "4974161",
+  "workflowType": "READY2RUN",
+  "roleArn": "arn:aws:iam::123412341234:role/MyRole",
+  "parameters": {
+    "inputFASTQ_2": "s3://omics-us-west-2/sample-inputs/4974161/HG002-NA24385-pFDA_S2_L002_R2_001-5x.fastq.gz",
+    "inputFASTQ_1": "s3://omics-us-west-2/sample-inputs/4974161/HG002-NA24385-pFDA_S2_L002_R1_001-5x.fastq.gz"
+  },
+  "outputUri": "s3://my-bucket/my-path"
+}
+StartRun response:
+{
+  "arn": "arn:aws:omics:us-west-2:123412341234:run/3456789",
+  "id": "3456789",
+  "status": "PENDING",
+  "tags": {}
+}
+```
+
+It is possible to override a request parameter from the original run. The following example tags the new run, which is particularly useful as tags are not propagated from the original run.
+```txt
+> omics-rerun 1234567 --tag=myKey=myValue
+StartRun request:
+{
+  "workflowId": "4974161",
+  "workflowType": "READY2RUN",
+  "roleArn": "arn:aws:iam::123412341234:role/MyRole",
+  "parameters": {
+    "inputFASTQ_2": "s3://omics-us-west-2/sample-inputs/4974161/HG002-NA24385-pFDA_S2_L002_R2_001-5x.fastq.gz",
+    "inputFASTQ_1": "s3://omics-us-west-2/sample-inputs/4974161/HG002-NA24385-pFDA_S2_L002_R1_001-5x.fastq.gz"
+  },
+  "outputUri": "s3://my-bucket/my-path",
+  "tags": {
+    "myKey": "myValue"
+  }
+}
+StartRun response:
+{
+  "arn": "arn:aws:omics:us-west-2:123412341234:run/4567890",
+  "id": "4567890",
+  "status": "PENDING",
+  "tags": {
+    "myKey": "myValue"
+  }
+}
+```
+
+Before submitting a rerun request, it is possible to dry-run to view the new StartRun request:
+```txt
+> omics-rerun -d 1234567
+StartRun request:
+{
+  "workflowId": "4974161",
+  "workflowType": "READY2RUN",
+  "roleArn": "arn:aws:iam::123412341234:role/MyRole",
+  "parameters": {
+    "inputFASTQ_2": "s3://omics-us-west-2/sample-inputs/4974161/HG002-NA24385-pFDA_S2_L002_R2_001-5x.fastq.gz",
+    "inputFASTQ_1": "s3://omics-us-west-2/sample-inputs/4974161/HG002-NA24385-pFDA_S2_L002_R1_001-5x.fastq.gz"
+  },
+  "outputUri": "s3://my-bucket/my-path"
+}
+```
+
 ## Security
 
 See [CONTRIBUTING](https://github.com/awslabs/amazon-omics-tools/blob/main/CONTRIBUTING.md#security-issue-notifications) for more information.
@@ -168,3 +249,4 @@ See [CONTRIBUTING](https://github.com/awslabs/amazon-omics-tools/blob/main/CONTR
 ## License
 
 This project is licensed under the Apache-2.0 License.
+
