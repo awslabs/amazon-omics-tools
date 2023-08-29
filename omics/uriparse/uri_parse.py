@@ -2,7 +2,11 @@
 
 import re
 
-from omics.common.omics_file_types import OMICS_URI_TYPE_FILENAME_MAP, OMICS_URI_TYPE_DEFAULT_FILENAME_MAP, OmicsFileType
+from omics.common.omics_file_types import (
+    OMICS_URI_TYPE_DEFAULT_FILENAME_MAP,
+    OMICS_URI_TYPE_FILENAME_MAP,
+    OmicsFileType,
+)
 
 
 class OmicsUri:
@@ -14,6 +18,7 @@ class OmicsUri:
     ex: omics://429915189008.storage.us-east-1.amazonaws.com/1981413158/readSet/5346184667/source1
     ex: omics://429915189008.storage.us-east-1.amazonaws.com/1981413158/reference/5346184667/source
     """
+
     URI_REGEX = r"omics://(\d{10,12})\.storage\.([a-z]{2}-[a-z-]{4,}-\d+)\.amazonaws\.com/(\d{10,36})/(readSet|reference)/(\d{10,36})(/(source[12]?|index))?$"
 
     def __init__(self, omics_uri):

@@ -53,15 +53,16 @@ Examples:
  omics-rerun -d 1234567
 """
 import datetime
-import dateutil
-import botocore
-import docopt
-import boto3
-import time
 import json
-import sys
-import re
 import os
+import re
+import sys
+import time
+
+import boto3
+import botocore
+import dateutil
+import docopt
 
 exename = os.path.basename(sys.argv[0])
 
