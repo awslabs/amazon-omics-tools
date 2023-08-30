@@ -1,8 +1,12 @@
 import unittest
 
 from omics.uriparse.uri_parse import OmicsUri, OmicsUriParser
-from tests.uriparse import VALID_READSET_URI, VALID_REFERENCE_URI
-from tests.uriparse import VALID_READSET_DEFAULT_FILE_URI, VALID_REFERENCE_DEFAULT_FILE_URI
+from tests.uriparse import (
+    VALID_READSET_DEFAULT_FILE_URI,
+    VALID_READSET_URI,
+    VALID_REFERENCE_DEFAULT_FILE_URI,
+    VALID_REFERENCE_URI,
+)
 
 
 class UriParserTest(unittest.TestCase):
