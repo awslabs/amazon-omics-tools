@@ -4,6 +4,23 @@ Tools for working with the Amazon Omics Service.
 
 ## Using the Omics Transfer Manager
 
+### Set-up
+When using the Omics Transfer Manager, it's important to install any necessary required dependencies and models. This includes installation of the latest Omics service model if it is not latest updated model.
+
+To install Omics Transfer Manager dependencies, use the pip command. If using Python3, use the pip3 command.
+
+The Omics Transfer Manager contains dependencies that are reliant on having Python 3.7 or later.
+
+Omics Transfer Manager uses the poetry library for dependency management and packaging. 
+
+```
+pip install botocore3
+pip install poetry
+poetry install
+```
+
+After running `poetry install`, the Omics Transfer Manager should be ready for usage.
+
 ### Basic Usage
 The `TransferManager` class makes it easy to download files for an Omics reference or read set.  By default the files are saved to the current directory, or you can specify a custom location with the `directory` parameter.
 
@@ -57,7 +74,7 @@ For paired end reads, you can define `fileobjs` as a list of files.
 read_set_id = manager.upload_read_set(
     "my-sequence-data/read-set-file.bam",
     SEQUENCE_STORE_ID,
-    ReadSetFileType.BAM,
+    "BAM",
     "name",
     "subject-id",
     "sample-id",
@@ -68,7 +85,7 @@ read_set_id = manager.upload_read_set(
 read_set_id = manager.upload_read_set(
     ["my-sequence-data/read-set-file_1.fastq.gz", "my-sequence-data/read-set-file_2.fastq.gz"],
     SEQUENCE_STORE_ID,
-    ReadSetFileType.FASTQ,
+    "FASTQ",
     "name",
     "subject-id",
     "sample-id",
