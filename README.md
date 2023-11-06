@@ -1,4 +1,4 @@
-# Amazon Omics Tools
+# AWS HealthOmics Tools
 
 Tools for working with the Amazon Omics Service.
 
