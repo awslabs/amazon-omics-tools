@@ -25,7 +25,6 @@ from s3transfer.utils import OSUtils, get_callbacks
 from omics.common.omics_file_types import (
     OmicsFileType,
     ReadSetFileName,
-    ReadSetFileType,
     ReferenceFileName,
 )
 from omics.transfer import (
@@ -52,6 +51,7 @@ FILE_TYPE_EXTENSION_MAP: dict[str, str] = {
     "FASTQ": "fastq",
     "BAM": "bam",
     "CRAM": "cram",
+    "UBAM": "bam",
 }
 
 # Map of file type to index file extension.
@@ -353,11 +353,11 @@ class TransferManager:
         self,
         fileobjs: Union[IO[Any], str, List[Union[IO[Any], str]]],
         sequence_store_id: str,
-        file_type: ReadSetFileType,
+        file_type: str,
         name: str,
         subject_id: str,
         sample_id: str,
-        reference_arn: str,
+        reference_arn: Optional[str] = None,
         generated_from: Optional[str] = None,
         description: Optional[str] = None,
         tags: Optional[Dict[str, str]] = None,
@@ -387,8 +387,11 @@ class TransferManager:
         if len(fileobjs) > 2:
             raise AttributeError("at most two files can be uploaded to a read set")
 
-        if len(fileobjs) > 1 and file_type is not ReadSetFileType.FASTQ:
+        if len(fileobjs) > 1 and file_type != "FASTQ":
             raise AttributeError("paired end read files only supported for FASTQ")
+
+        if (reference_arn is None) and (file_type not in ["FASTQ", "UBAM"]):
+            raise AttributeError("Unlinked read set file types must specify a reference ARN")
 
         transfer_coordinator = self._get_future_coordinator()
         transfer_futures = []

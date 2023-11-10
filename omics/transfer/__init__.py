@@ -3,7 +3,7 @@ from typing import IO, Any, Dict, List, Optional, Union
 from s3transfer.futures import TransferFuture
 from s3transfer.subscribers import BaseSubscriber
 
-from omics.common.omics_file_types import OmicsFileType, ReadSetFileType
+from omics.common.omics_file_types import OmicsFileType
 
 
 class OmicsTransferSubscriber(BaseSubscriber):
@@ -60,12 +60,12 @@ class ReadSetUpload:
     def __init__(
         self,
         store_id: str,
-        file_type: ReadSetFileType,
+        file_type: str,
         name: str,
         subject_id: str,
         sample_id: str,
-        reference_arn: str,
         fileobj: Union[IO[Any], str],
+        reference_arn: Optional[str] = None,
         generated_from: Optional[str] = None,
         description: Optional[str] = None,
         tags: Optional[Dict[str, str]] = None,

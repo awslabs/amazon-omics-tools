@@ -7,7 +7,6 @@ from s3transfer.utils import OSUtils
 
 from omics.common.omics_file_types import (
     ReadSetFileName,
-    ReadSetFileType,
     ReferenceFileName,
 )
 from omics.transfer.manager import TransferManager, _format_local_filename
@@ -129,6 +128,11 @@ class TestTransferManager(StubbedClientTest):
         filename = _format_local_filename("test-filename", ReadSetFileName.INDEX, "FASTQ")
         self.assertEqual(filename, "test-filename.index")
 
+    # UBAM should not have an .index file but we include this for consistency.
+    def test_format_ubam_index_local_filename(self):
+        filename = _format_local_filename("test-filename", ReadSetFileName.INDEX, "UBAM")
+        self.assertEqual(filename, "test-filename.index")
+
     def test_format_gz_local_filename(self):
         filename = _format_local_filename("test-filename", ReadSetFileName.SOURCE1, "FASTQ", True)
         self.assertEqual(filename, "test-filename_1.fastq")
@@ -193,12 +197,37 @@ class TestTransferManager(StubbedClientTest):
     def test_upload_paired_with_wrong_file_type_throws_exception(self):
         with self.assertRaises(AttributeError):
             self.run_simple_upload(
-                [io.BytesIO(b"content1"), io.BytesIO(b"content2")], ReadSetFileType.BAM
+                [io.BytesIO(b"content1"), io.BytesIO(b"content2")], "BAM"
             ).result()
         self.stubber.assert_no_pending_responses()
 
+    def test_upload_no_reference_with_BAM_file_type_exception(self):
+        with self.assertRaises(AttributeError):
+            self.self.transfer_manager.upload_read_set(
+                io.BytesIO(b"some file content1"),
+                TEST_CONSTANTS["sequence_store_id"],
+                "BAM",
+                "name",
+                "subjectId",
+                "sampleId",
+            ).result()
+
+        self.stubber.assert_no_pending_responses()
+
+    def test_upload_no_reference_with_BAM_file_type_exception(self):
+        with self.assertRaises(AttributeError):
+            self.self.transfer_manager.upload_read_set(
+                io.BytesIO(b"some file content1"),
+                TEST_CONSTANTS["sequence_store_id"],
+                "CRAM",
+                "name",
+                "subjectId",
+                "sampleId",
+            ).result()
+
+        self.stubber.assert_no_pending_responses()
     def run_simple_upload(
-        self, files: any, file_type: ReadSetFileType = ReadSetFileType.FASTQ
+        self, files: any, file_type: str = "FASTQ"
     ) -> TransferFuture:
         return self.transfer_manager.upload_read_set(
             files,

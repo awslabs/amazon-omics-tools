@@ -73,3 +73,4 @@ class ReadSetFileType(ExtendedEnum):
     FASTQ = "FASTQ"
     BAM = "BAM"
     CRAM = "CRAM"
+    UBAM = "UBAM"
