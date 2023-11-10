@@ -53,7 +53,7 @@ class CreateMultipartReadSetUploadTask(Task):
         )
         upload_id = response["uploadId"]
 
-        if (args["referenceArn"] == "" and args["sourceFileType" != "FASTQ" or "UBAM"]):
+        if (args["referenceArn"] == "") and (args["sourceFileType"] not in ["FASTQ", "UBAM"]):
             raise AttributeError("Unlinked read set file types must specify a reference ARN")
 
         # Add a cleanup if the multipart upload fails at any point.

@@ -36,55 +36,58 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.26.133"
+version = "1.28.83"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "boto3-1.26.133-py3-none-any.whl", hash = "sha256:62285ecee7629a4388d55ae369536f759622d68d5b9a0ced7c58a0c1a409c0f7"},
-    {file = "boto3-1.26.133.tar.gz", hash = "sha256:8ff0af0b25266a01616396abc19eb34dc3d44bd867fa4158985924128b9034fb"},
+    {file = "boto3-1.28.83-py3-none-any.whl", hash = "sha256:1d10691911c4b8b9443d3060257ba32b68b6e3cad0eebbb9f69fd1c52a78417f"},
+    {file = "boto3-1.28.83.tar.gz", hash = "sha256:489c4967805b677b7a4030460e4c06c0903d6bc0f6834453611bf87efbd8d8a3"},
 ]
 
 [package.dependencies]
-botocore = ">=1.29.133,<1.30.0"
+botocore = ">=1.31.83,<1.32.0"
 jmespath = ">=0.7.1,<2.0.0"
-s3transfer = ">=0.6.0,<0.7.0"
+s3transfer = ">=0.7.0,<0.8.0"
 
 [package.extras]
 crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.29.133"
+version = "1.31.83"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.29.133-py3-none-any.whl", hash = "sha256:b266185d7414a559952569005009a400de50af91fd3da44f05cf05b00946c4a7"},
-    {file = "botocore-1.29.133.tar.gz", hash = "sha256:7b38e540f73c921d8cb0ac72794072000af9e10758c04ba7f53d5629cc52fa87"},
+    {file = "botocore-1.31.83-py3-none-any.whl", hash = "sha256:c742069e8bfd06d212d712228258ff09fb481b6ec02358e539381ce0fcad065a"},
+    {file = "botocore-1.31.83.tar.gz", hash = "sha256:40914b0fb28f13d709e1f8a4481e278350b77a3987be81acd23715ec8d5fedca"},
 ]
 
 [package.dependencies]
 jmespath = ">=0.7.1,<2.0.0"
 python-dateutil = ">=2.1,<3.0.0"
-urllib3 = ">=1.25.4,<1.27"
+urllib3 = {version = ">=1.25.4,<2.1", markers = "python_version >= \"3.10\""}
 
 [package.extras]
-crt = ["awscrt (==0.16.9)"]
+crt = ["awscrt (==0.16.26)"]
 
 [[package]]
 name = "botocore-stubs"
-version = "1.29.130"
+version = "1.31.83"
 description = "Type annotations and code completion for botocore"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "botocore_stubs-1.29.130-py3-none-any.whl", hash = "sha256:622c4a5cd740498439008d81c5ded612146f4f0d575341c12591f978edbbe733"},
-    {file = "botocore_stubs-1.29.130.tar.gz", hash = "sha256:5f6f1967d23c45834858a055cbf65b66863f9f28d05f32f57bf52864a13512d9"},
+    {file = "botocore_stubs-1.31.83-py3-none-any.whl", hash = "sha256:2cedd21d0068d8dabff86a534021e26952668919619f1f4b4cf1bfd1c7158bd7"},
+    {file = "botocore_stubs-1.31.83.tar.gz", hash = "sha256:b79220731c6d5c377a56e6c8afbaecf52b425646233ab8c8b7221699cf81e0bd"},
 ]
 
 [package.dependencies]
 types-awscrt = "*"
+
+[package.extras]
+botocore = ["botocore (==1.31.76)"]
 
 [[package]]
 name = "cachecontrol"
@@ -598,14 +601,17 @@ reports = ["lxml"]
 
 [[package]]
 name = "mypy-boto3-omics"
-version = "1.26.133"
-description = "Type annotations for boto3.Omics 1.26.133 service generated with mypy-boto3-builder 7.14.5"
+version = "1.28.83"
+description = "Type annotations for boto3.Omics 1.28.83 service generated with mypy-boto3-builder 7.19.1"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "mypy-boto3-omics-1.26.133.tar.gz", hash = "sha256:5abae610e2328a150bfc108d37c33520098bb92f7c8c7123a0b2c9d5a29909cd"},
-    {file = "mypy_boto3_omics-1.26.133-py3-none-any.whl", hash = "sha256:8d2b4f9933031abc7d608b87a49208d24b4f7a453dc2f8c0ecd464aca06e8718"},
+    {file = "mypy-boto3-omics-1.28.83.tar.gz", hash = "sha256:56e517d1b069ae2f85a3fb311c0c917e40b4e7de3f15299167478cb5b294f726"},
+    {file = "mypy_boto3_omics-1.28.83-py3-none-any.whl", hash = "sha256:389d82d81a16798cbff49b8269114349641f7798f432ed96e3d88bc0ab3e0782"},
 ]
+
+[package.dependencies]
+typing-extensions = {version = ">=4.1.0", markers = "python_version < \"3.12\""}
 
 [[package]]
 name = "mypy-extensions"
@@ -936,13 +942,13 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "s3transfer"
-version = "0.6.1"
+version = "0.7.0"
 description = "An Amazon S3 Transfer Manager"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "s3transfer-0.6.1-py3-none-any.whl", hash = "sha256:3c0da2d074bf35d6870ef157158641178a4204a6e689e82546083e31e0311346"},
-    {file = "s3transfer-0.6.1.tar.gz", hash = "sha256:640bb492711f4c0c0905e1f62b6aaeb771881935ad27884852411f8e9cacbca9"},
+    {file = "s3transfer-0.7.0-py3-none-any.whl", hash = "sha256:10d6923c6359175f264811ef4bf6161a3156ce8e350e705396a7557d6293c33a"},
+    {file = "s3transfer-0.7.0.tar.gz", hash = "sha256:fd3889a66f5fe17299fe75b82eae6cf722554edca744ca5d5fe308b104883d2e"},
 ]
 
 [package.dependencies]
@@ -1113,4 +1119,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "1412afab01599a11a32eeeab456b9fe3c3f56309bd514a881486495043fd344b"
+content-hash = "673627eb9775d0c5e966d8dabaca0cb17800b9953972dcf7c5796a41fff1c2db"

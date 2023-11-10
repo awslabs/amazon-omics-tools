@@ -5,10 +5,7 @@ import tempfile
 from s3transfer.futures import TransferFuture
 from s3transfer.utils import OSUtils
 
-from omics.common.omics_file_types import (
-    ReadSetFileName,
-    ReferenceFileName,
-)
+from omics.common.omics_file_types import ReadSetFileName, ReferenceFileName
 from omics.transfer.manager import TransferManager, _format_local_filename
 from tests.transfer import (
     TEST_CONSTANTS,
@@ -214,7 +211,7 @@ class TestTransferManager(StubbedClientTest):
 
         self.stubber.assert_no_pending_responses()
 
-    def test_upload_no_reference_with_BAM_file_type_exception(self):
+    def test_upload_no_reference_with_CRAM_file_type_exception(self):
         with self.assertRaises(AttributeError):
             self.self.transfer_manager.upload_read_set(
                 io.BytesIO(b"some file content1"),
@@ -226,9 +223,8 @@ class TestTransferManager(StubbedClientTest):
             ).result()
 
         self.stubber.assert_no_pending_responses()
-    def run_simple_upload(
-        self, files: any, file_type: str = "FASTQ"
-    ) -> TransferFuture:
+
+    def run_simple_upload(self, files: any, file_type: str = "FASTQ") -> TransferFuture:
         return self.transfer_manager.upload_read_set(
             files,
             TEST_CONSTANTS["sequence_store_id"],
