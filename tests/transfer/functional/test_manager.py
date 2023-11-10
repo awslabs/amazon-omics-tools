@@ -9,7 +9,6 @@ from s3transfer.exceptions import FatalError
 from omics.common.omics_file_types import (
     OmicsFileType,
     ReadSetFileName,
-    ReadSetFileType,
     ReferenceFileName,
 )
 from omics.transfer.config import TransferConfig
@@ -214,7 +213,7 @@ class SingleThreadedTransferManagerTest(StubbedClientTest):
         read_set_id = self.manager.upload_read_set(
             io.BytesIO(os.urandom(MIB_BYTES * 250)),
             TEST_CONSTANTS["sequence_store_id"],
-            ReadSetFileType.CRAM,
+            "CRAM",
             "name",
             "subjectId",
             "sampleId",
@@ -359,7 +358,7 @@ class MultiThreadedTransferManagerTest(StubbedClientTest):
         read_set_id = self.manager.upload_read_set(
             io.BytesIO(os.urandom(MIB_BYTES)),
             TEST_CONSTANTS["sequence_store_id"],
-            ReadSetFileType.CRAM,
+            "CRAM",
             "name",
             "subjectId",
             "sampleId",

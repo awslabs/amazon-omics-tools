@@ -4,6 +4,14 @@ Tools for working with the Amazon Omics Service.
 
 ## Using the Omics Transfer Manager
 
+### Installation
+Installation
+Amazon Omics Tools is available through pypi. To install, type:
+
+```python
+pip install amazon-omics-tools
+```
+
 ### Basic Usage
 The `TransferManager` class makes it easy to download files for an Omics reference or read set.  By default the files are saved to the current directory, or you can specify a custom location with the `directory` parameter.
 
@@ -57,7 +65,7 @@ For paired end reads, you can define `fileobjs` as a list of files.
 read_set_id = manager.upload_read_set(
     "my-sequence-data/read-set-file.bam",
     SEQUENCE_STORE_ID,
-    ReadSetFileType.BAM,
+    "BAM",
     "name",
     "subject-id",
     "sample-id",
@@ -68,7 +76,7 @@ read_set_id = manager.upload_read_set(
 read_set_id = manager.upload_read_set(
     ["my-sequence-data/read-set-file_1.fastq.gz", "my-sequence-data/read-set-file_2.fastq.gz"],
     SEQUENCE_STORE_ID,
-    ReadSetFileType.FASTQ,
+    "FASTQ",
     "name",
     "subject-id",
     "sample-id",

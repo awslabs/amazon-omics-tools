@@ -40,6 +40,24 @@ GitHub provides additional document on [forking a repository](https://help.githu
 [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
 
 
+### Set-up
+When using the Omics Transfer Manager, it's important to install any necessary required dependencies and models. This includes installation of the latest Omics service model if it is not latest updated model.
+
+To install Omics Transfer Manager dependencies, use the pip command. If using Python3, use the pip3 command.
+
+The Omics Transfer Manager contains dependencies that are reliant on having Python 3.7 or later.
+
+Omics Transfer Manager uses the poetry library for dependency management and packaging.
+
+```
+pip install botocore3
+pip install mypy-boto3-omics
+pip install poetry
+poetry install
+```
+
+After running `poetry install`, the Omics Transfer Manager should be ready for usage.
+
 ## Finding contributions to work on
 Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any 'help wanted' issues is a great place to start.
 

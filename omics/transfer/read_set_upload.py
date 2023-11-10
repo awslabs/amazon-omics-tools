@@ -38,7 +38,7 @@ class CreateMultipartReadSetUploadTask(Task):
         """
         args = {
             "sequenceStoreId": create_args.store_id,
-            "sourceFileType": create_args.file_type.value,
+            "sourceFileType": create_args.file_type,
             "subjectId": create_args.subject_id,
             "sampleId": create_args.sample_id,
             "generatedFrom": create_args.generated_from,
@@ -52,6 +52,9 @@ class CreateMultipartReadSetUploadTask(Task):
             **{k: v for k, v in args.items() if v is not None}
         )
         upload_id = response["uploadId"]
+
+        if (args["referenceArn"] == "" and args["sourceFileType" != "FASTQ" or "UBAM"]):
+            raise AttributeError("Unlinked read set file types must specify a reference ARN")
 
         # Add a cleanup if the multipart upload fails at any point.
         self._transfer_coordinator.add_failure_cleanup(
