@@ -50,7 +50,7 @@ The Omics Transfer Manager contains dependencies that are reliant on having Pyth
 Omics Transfer Manager uses the poetry library for dependency management and packaging.
 
 ```
-pip install botocore3
+pip install botocore
 pip install mypy-boto3-omics
 pip install poetry
 poetry install
