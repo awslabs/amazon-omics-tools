@@ -18,6 +18,8 @@ s3transfer = "^0.7.0"
 boto3 = "^1.28.83"
 mypy-boto3-omics = "^1.28.83"
 botocore-stubs = "^1.31.83"
+docopt = "^0.6.2"
+python-dateutil = "^2.8.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"

@@ -24,7 +24,8 @@ Options:
 
 Examples:
  # Show workflow runs that were running in the last 5 days
- omics-run-analyzer -t5d
+ # (supported time units include minutes, hours, days, weeks, or years)
+ omics-run-analyzer --time=5days
  # Retrieve and analyze a specific workflow run by ID
  omics-run-analyzer 1234567 -o run-1234567.csv
  # Retrieve and analyze a specific workflow run by ID and UUID
@@ -44,9 +45,10 @@ import dateutil
 import docopt
 
 exename = os.path.basename(sys.argv[0])
-omics_log_group = "/aws/omics/WorkflowLog"
-omics_service_code = "AmazonOmics"
-pricing_aws_region = "us-east-1"  # Pricing service endpoint
+OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
+OMICS_SERVICE_CODE = "AmazonOmics"
+PRICING_AWS_REGION = "us-east-1"  # Pricing service endpoint
+SECS_PER_HOUR = 3600.0
 
 
 def die(msg):
@@ -62,10 +64,10 @@ def parse_time_str(s, utc=True):
 
 def parse_time_delta(s):
     """Parse time delta string"""
-    m = re.match(r"(\d+)\s*(m|min|minutes?|h|hours?|d|days?|w|weeks?)$", s)
+    m = re.match(r"(\d+)\s*(m|min|minutes?|h|hours?|d|days?|w|weeks?|y|years?)$", s)
     if not m:
         die("unrecognized time interval format '{}'".format(s))
-    secs = {"m": 60, "h": 3600, "d": 86400, "w": 604800}
+    secs = {"m": 60, "h": 3600, "d": 86400, "w": 604800, "y": 220752000}
     delta = int(m.group(1)) * secs[m.group(2)[0]]
     return datetime.timedelta(seconds=delta)
 
@@ -116,7 +118,7 @@ def get_pricing(pricing, resource, region, hours):
         {"Type": "TERM_MATCH", "Field": "resourceType", "Value": resource},
         {"Type": "TERM_MATCH", "Field": "regionCode", "Value": region},
     ]
-    rqst = {"ServiceCode": omics_service_code, "Filters": filters}
+    rqst = {"ServiceCode": OMICS_SERVICE_CODE, "Filters": filters}
     for page in pricing.get_paginator("get_products").paginate(**rqst):
         for item in page["PriceList"]:
             entry = json.loads(item)
@@ -176,7 +178,7 @@ def get_runs(logs, runs, opts):
             else:
                 prefix = f"manifest/run/{run[-1]}/"
             rqst = {
-                "logGroupName": omics_log_group,
+                "logGroupName": OMICS_LOG_GROUP,
                 "logStreamNamePrefix": prefix,
             }
             streams.extend(get_streams(logs, rqst))
@@ -185,7 +187,7 @@ def get_runs(logs, runs, opts):
         start_time = datetime.datetime.now() - parse_time_delta(opts["--time"])
         start_time = start_time.timestamp() * 1000.0
         rqst = {
-            "logGroupName": omics_log_group,
+            "logGroupName": OMICS_LOG_GROUP,
             "orderBy": "LastEventTime",
             "descending": True,
         }
@@ -197,7 +199,7 @@ def get_runs(logs, runs, opts):
 def get_run_resources(logs, run):
     """Get workflow run/task details"""
     rqst = {
-        "logGroupName": omics_log_group,
+        "logGroupName": OMICS_LOG_GROUP,
         "logStreamName": run["logStreamName"],
         "startFromHead": True,
     }
@@ -317,27 +319,27 @@ def add_metrics(res, resources, pricing):
     if rtype == "run":
         capacity = get_storage_gib(res.get("storageCapacity"))
         metrics["sizeReserved"] = f"{capacity} GiB"
-        gib_hrs = capacity * running / 3600.0
+        gib_hrs = capacity * running / SECS_PER_HOUR
         price = get_pricing(pricing, "Run Storage", region, gib_hrs)
         if price:
             metrics["estimatedUSD"] = price
         if store_max:
             capacity = get_storage_gib(store_max)
         metrics["sizeMinimum"] = f"{capacity} GiB"
-        gib_hrs = capacity * running / 3600.0
+        gib_hrs = capacity * running / SECS_PER_HOUR
         price = get_pricing(pricing, "Run Storage", region, gib_hrs)
         if price:
             metrics["minimumUSD"] = price
     elif "instanceType" in res:
         itype = res["instanceType"]
         metrics["sizeReserved"] = itype
-        price = get_pricing(pricing, itype, region, running / 3600.0)
+        price = get_pricing(pricing, itype, region, running / SECS_PER_HOUR)
         if price:
             metrics["estimatedUSD"] = price
         if cpus_max and mem_max and not gpus_res:
             itype = get_instance(cpus_max, mem_max)
         metrics["sizeMinimum"] = itype
-        price = get_pricing(pricing, itype, region, running / 3600.0)
+        price = get_pricing(pricing, itype, region, running / SECS_PER_HOUR)
         if price:
             metrics["minimumUSD"] = price
 
@@ -370,8 +372,8 @@ if __name__ == "__main__":
         session = boto3.Session(
             profile_name=opts["--profile"], region_name=opts["--region"]
         )
-        pricing = session.client("pricing", region_name=pricing_aws_region)
-        pricing.describe_services(ServiceCode=omics_service_code)
+        pricing = session.client("pricing", region_name=PRICING_AWS_REGION)
+        pricing.describe_services(ServiceCode=OMICS_SERVICE_CODE)
     except Exception as e:
         die(e)
 
