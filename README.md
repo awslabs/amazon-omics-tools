@@ -250,6 +250,31 @@ StartRun request:
 }
 ```
 
+## Using the Omics Run Analyzer tool
+### Basic Usage
+The `omics-run-analyzer` tool retrieves a workflow run manifest from CloudWatchLogs and generates statistics for the run, including CPU and memory utilization for each workflow task.
+
+#### List completed runs
+The following example lists all workflow runs completed in the past 5 days:
+```txt
+> omics-run-analyzer -t5d
+Workflow run IDs (<completionTime> <UUID>):
+1234567 (2024-02-01T12:00:00 12345678-1234-5678-9abc-123456789012)
+2345678 (2024-02-03T13:00:00 12345678-1234-5678-9abc-123456789012)
+```
+
+#### Analyze a specific workflow run
+```txt
+> omics-run-analyzer 1234567 -o run-1234567.csv
+omics-run-analyzer: wrote run-1234567.csv
+```
+
+#### Output workflow run manifest in JSON format
+```txt
+> omics-run-analyzer 1234567 -s -o run-1234567.json
+omics-run-analyzer: wrote run-1234567.json
+```
+
 ## Security
 
 See [CONTRIBUTING](https://github.com/awslabs/amazon-omics-tools/blob/main/CONTRIBUTING.md#security-issue-notifications) for more information.
