@@ -269,6 +269,32 @@ Workflow run IDs (<completionTime> <UUID>):
 omics-run-analyzer: wrote run-1234567.csv
 ```
 
+The CSV output by the command above includes the following columns:
+
+* __arn__ : Unique workflow run or task identifier
+* __type__ : Resource type (_run_ or _task_)
+* __name__ : Workflow run or task name
+* __startTime__ : Start timestamp for the workflow run or task (UTC time)
+* __stopTime__ : Stop timestamp for the workflow run or task (UTC time)
+* __runningSeconds__ : Approximate workflow run or task runtime (in seconds)
+* __sizeReserved__ : Requested storage capacity (workflow run) or Omics instance size (workflow task)
+* __sizeMinimum__ : Minimum recommended storage capacity or Omics instance size, based on the measured storage/CPU/memory utilization
+* __estimatedUSD__ : Estimated Omics charges (USD) based on _sizeReserved_ and _runningSeconds_
+* __minimumUSD__ : Estimated Omics charges (USD) based on _sizeMinimum_ and _runningSeconds_
+* __cpuUtilization__ : CPU utilization (_cpusMaximum_ / _cpusReserved_) for workflow task(s)
+* __memoryUtilization__ : Memory utilization (_memoryMaximumGiB_ / _memoryReservedGiB_) for the workflow task(s)
+* __storageUtilization__ : Storage utilization (_storageMaximumGiB_ / _storageReservedGiB_) for the workflow run
+* __cpusReserved__ : vCPUs reserved for workflow task(s)
+* __cpusMaximum__ : Maximum vCPUs used during a single 1-minute interval
+* __cpusAverage__ : Average vCPUs used by workflow task(s)
+* __gpusReserved__ : GPUs reserved for workflow task(s)
+* __memoryReservedGiB__ : Gibibytes of memory reserved for workflow task(s)
+* __memoryMaximumGiB__ : Maximum gibibytes of memory used during a single 1-minute interval
+* __memoryAverageGiB__ : Average gibibytes of memory used by workflow task(s)
+* __storageReservedGiB__ : Gibibytes of storage reserved for the workflow run
+* __storageMaximumGiB__ : Maximum gibibytes of storage used during a single 1-minute interval
+* __storageAverageGiB__ : Average gibibytes of storage used by the workflow run
+
 #### Output workflow run manifest in JSON format
 ```txt
 > omics-run-analyzer 1234567 -s -o run-1234567.json
