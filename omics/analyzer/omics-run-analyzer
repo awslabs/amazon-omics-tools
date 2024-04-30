@@ -369,9 +369,7 @@ if __name__ == "__main__":
     opts = docopt.docopt(__doc__)
 
     try:
-        session = boto3.Session(
-            profile_name=opts["--profile"], region_name=opts["--region"]
-        )
+        session = boto3.Session(profile_name=opts["--profile"], region_name=opts["--region"])
         pricing = session.client("pricing", region_name=PRICING_AWS_REGION)
         pricing.describe_services(ServiceCode=OMICS_SERVICE_CODE)
     except Exception as e:
@@ -433,6 +431,9 @@ if __name__ == "__main__":
                 "startTime",
                 "stopTime",
                 "runningSeconds",
+                "cpus",
+                "gpus",
+                "memory",
                 "sizeReserved",
                 "sizeMinimum",
                 "estimatedUSD",
@@ -451,8 +452,18 @@ if __name__ == "__main__":
                 "storageMaximumGiB",
                 "storageAverageGiB",
             ]
+
+            # Rename these headers for consistency
+            hrdrs_map = {
+                "cpus": "cpusRequested",
+                "gpus": "gpusRequested",
+                "memory": "memoryRequested",
+            }
+
+            formatted_headers = [hrdrs_map.get(h, h) for h in hdrs]
+
             writer = csv.writer(out, lineterminator="\n")
-            writer.writerow(hdrs)
+            writer.writerow(formatted_headers)
             for res in resources:
                 add_metrics(res, resources, pricing)
                 metrics = res.get("metrics", {})
