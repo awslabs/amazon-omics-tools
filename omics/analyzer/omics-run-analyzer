@@ -49,7 +49,10 @@ OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
 OMICS_SERVICE_CODE = "AmazonOmics"
 PRICING_AWS_REGION = "us-east-1"  # Pricing service endpoint
 SECS_PER_HOUR = 3600.0
-
+STORAGE_TYPE_DYNAMIC_RUN_STORAGE="DYNAMIC"
+STORAGE_TYPE_STATIC_RUN_STORAGE="STATIC"
+PRICE_RESOURCE_TYPE_DYNAMIC_RUN_STORAGE="Dynamic Run Storage"
+PRICE_RESOURCE_TYPE_STATIC_RUN_STORAGE="Run Storage"
 
 def die(msg):
     """Show error message and terminate"""
@@ -72,7 +75,7 @@ def parse_time_delta(s):
     return datetime.timedelta(seconds=delta)
 
 
-def get_storage_gib(capacity=None):
+def get_static_storage_gib(capacity=None):
     """Return filesystem size in GiB"""
     omics_storage_min = 1200  # Minimum size
     omics_storage_inc = 2400  # Size increment (2400, 4800, 7200, ...)
@@ -313,23 +316,40 @@ def add_metrics(res, resources, pricing):
         metrics["memoryUtilization"] = float(mem_max) / float(mem_res)
     store_res = metrics.get("storageReservedGiB")
     store_max = metrics.get("storageMaximumGiB")
+    store_avg = metrics.get("storageAverageGiB")
     if store_res and store_max:
         metrics["storageUtilization"] = float(store_max) / float(store_res)
 
+    storage_type = res.get("storageType")
+
     if rtype == "run":
-        capacity = get_storage_gib(res.get("storageCapacity"))
+        # Get capacity requested (static), capacity max. used (dynamic) and 
+        # charged storage (the requested capacity for static or average used for dynamic)
+        if storage_type == STORAGE_TYPE_STATIC_RUN_STORAGE:
+            price_resource_type = PRICE_RESOURCE_TYPE_STATIC_RUN_STORAGE
+            capacity = get_static_storage_gib(res.get("storageCapacity"))
+            charged = capacity
+        elif storage_type == STORAGE_TYPE_DYNAMIC_RUN_STORAGE:
+            price_resource_type = PRICE_RESOURCE_TYPE_DYNAMIC_RUN_STORAGE
+            capacity = store_max
+            charged = store_avg
+
+        # Get price for actually used storage (approx. for dynamic storage)
         metrics["sizeReserved"] = f"{capacity} GiB"
-        gib_hrs = capacity * running / SECS_PER_HOUR
-        price = get_pricing(pricing, "Run Storage", region, gib_hrs)
+        gib_hrs = charged * running / SECS_PER_HOUR
+        price = get_pricing(pricing, price_resource_type, region, gib_hrs)
         if price:
             metrics["estimatedUSD"] = price
+            
+        # Get price for optimal static storage
         if store_max:
-            capacity = get_storage_gib(store_max)
+            capacity = get_static_storage_gib(store_max)
         metrics["sizeMinimum"] = f"{capacity} GiB"
         gib_hrs = capacity * running / SECS_PER_HOUR
-        price = get_pricing(pricing, "Run Storage", region, gib_hrs)
+        price = get_pricing(pricing, PRICE_RESOURCE_TYPE_STATIC_RUN_STORAGE, region, gib_hrs)
         if price:
             metrics["minimumUSD"] = price
+
     elif "instanceType" in res:
         itype = res["instanceType"]
         metrics["sizeReserved"] = itype
