@@ -265,7 +265,7 @@ if __name__ == "__main__":
                     resp = omics.start_run(**rqst)
                 except Exception as e:
                     die(f"StartRun failed: {e}")
-                del resp["ResponseMetadata"]
+                del resp["ResponseMetadata"]  # type: ignore
                 out.write(f"StartRun response:\n{json.dumps(resp, indent=2)}\n")
 
     if opts["--out"]:
