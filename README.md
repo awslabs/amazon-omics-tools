@@ -1,18 +1,49 @@
 # AWS HealthOmics Tools
 
-Tools for working with the Amazon Omics Service.
+SDK and CLI Tools for working with the AWS HealthOmics Service.
 
-## Using the Omics Transfer Manager
+- [AWS HealthOmics Tools](#aws-healthomics-tools)
+  - [Installation](#installation)
+  - [SDK Tools](#sdk-tools)
+    - [Omics Transfer Manager](#omics-transfer-manager)
+      - [Basic Usage](#basic-usage)
+      - [Download specific files](#download-specific-files)
+      - [Upload specific files](#upload-specific-files)
+      - [Subscribe to events](#subscribe-to-events)
+      - [Threads](#threads)
+    - [Omics URI Parser](#omics-uri-parser)
+      - [Readset file URI:](#readset-file-uri)
+      - [Reference file URI:](#reference-file-uri)
+  - [CLI Tools](#cli-tools)
+    - [Omics Rerun](#omics-rerun)
+      - [List runs from manifest](#list-runs-from-manifest)
+      - [Rerun a previously-executed run](#rerun-a-previously-executed-run)
+    - [Omics Run Analyzer](#omics-run-analyzer)
+      - [List completed runs](#list-completed-runs)
+      - [Analyze a specific workflow run](#analyze-a-specific-workflow-run)
+      - [Output workflow run manifest in JSON format](#output-workflow-run-manifest-in-json-format)
+  - [Security](#security)
+  - [License](#license)
 
-### Installation
-Installation
-Amazon Omics Tools is available through pypi. To install, type:
+## Installation
+AWS HealthOmics Tools is available through pypi. To install, type:
 
-```python
+```bash
 pip install amazon-omics-tools
 ```
 
-### Basic Usage
+To install from source:
+
+```
+git clone https://github.com/awslabs/amazon-omics-tools.git
+pip install ./amazon-omics-tools
+```
+
+## SDK Tools
+
+### Omics Transfer Manager
+
+#### Basic Usage
 The `TransferManager` class makes it easy to download files for an Omics reference or read set.  By default the files are saved to the current directory, or you can specify a custom location with the `directory` parameter.
 
 ```python
@@ -34,7 +65,7 @@ manager.download_reference(REFERENCE_STORE_ID, "<my-reference-id>")
 manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>", "my-sequence-data")
 ```
 
-### Download specific files
+#### Download specific files
 Specific files can be downloaded via the `download_reference_file` and `download_read_set_file` methods.
 The `client_fileobj` parameter can be either the name of a local file to create for storing the data, or a `TextIO` or `BinaryIO` object that supports write methods.
 
@@ -55,7 +86,7 @@ manager.download_read_set_file(
 )
 ```
 
-### Upload specific files
+#### Upload specific files
 Specific files can be uploaded via the `upload_read_set` method.
 The `fileobjs` parameter can be either the name of a local file, or a `TextIO` or `BinaryIO` object that supports read methods.
 For paired end reads, you can define `fileobjs` as a list of files.
@@ -84,7 +115,7 @@ read_set_id = manager.upload_read_set(
 )
 ```
 
-### Subscribe to events
+#### Subscribe to events
 Transfer events: `on_queued`, `on_progress`, and `on_done` can be observed by defining a subclass of `OmicsTransferSubscriber` and passing in an object which can receive events.
 
 ```python
@@ -99,7 +130,7 @@ class ProgressReporter(OmicsTransferSubscriber):
 manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>", subscribers=[ProgressReporter()])
 ```
 
-### Threads
+#### Threads
 Transfer operations use threads to implement concurrency. Thread use can be disabled by setting the `use_threads` attribute to False.
 
 If thread use is disabled, transfer concurrency does not occur. Accordingly, the value of the `max_request_concurrency` attribute is ignored.
@@ -111,32 +142,36 @@ manager = TransferManager(client, config)
 manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>")
 ```
 
-## Using the Omics URI Parser
-### Basic Usage
+### Omics URI Parser
+
 The `OmicsUriParser` class makes it easy to parse omics readset and reference URIs to extract fields relevant for calling 
 AWS omics APIs.
 
 
 #### Readset file URI: 
 Readset file URIs come in the following format: 
-```
+
+```text
 omics://<AWS_ACCOUNT_ID>.storage.<AWS_REGION>.amazonaws.com/<SEQUENCE_STORE_ID>/readSet/<READSET_ID>/<SOURCE1/SOURCE2>
 ```
+
 For example:
-```
+```text
 omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/readSet/5346184667/source1
 omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/readSet/5346184667/source2
 ```
 
 #### Reference file URI:
 Reference file URIs come in the following format: 
-```
+```text
 omics://<AWS_ACCOUNT_ID>.storage.<AWS_REGION>.amazonaws.com/<REFERENCE_STORE_ID>/reference/<REFERENCE_ID>/source
 ```
 For example:
-```
+```text
 omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/reference/5346184667/source
 ```
+
+To handle both Omics URI types, you would use code like the following:
 
 ```python
 import boto3
@@ -169,14 +204,32 @@ manager.download_read_set_file(
 )
 ```
 
-## Using the Omics Rerun tool
-### Basic Usage
+## CLI Tools
+CLI tools are modules in this package that can be invoked from the command line with:
+
+```bash
+python -m omics.cli.<TOOL-NAME>
+```
+
+### Omics Rerun
+
 The `omics-rerun` tool makes it easy to start a new run execution from a CloudWatch Logs manifest.
+
+For an overview of what it does and available options run:
+
+```bash
+python -m omics.cli.rerun -h
+```
 
 #### List runs from manifest
 The following example lists all workflow run ids which were completed on July 1st (UTC time):
-```txt
-> omics-rerun -s 2023-07-01T00:00:00 -e 2023-07-02T00:00:00
+```bash
+python -m omics.cli.rerun -s 2023-07-01T00:00:00 -e 2023-07-02T00:00:00
+```
+
+this returns something like:
+
+```text
 1234567 (2023-07-01T12:00:00.000)
 2345678 (2023-07-01T13:00:00.000)
 ```
@@ -184,8 +237,13 @@ The following example lists all workflow run ids which were completed on July 1s
 #### Rerun a previously-executed run
 To rerun a previously-executed run, specify the run id you would like to rerun:
 
-```txt
-> omics-rerun 1234567
+```bash
+python -m omics.cli.rerun 1234567
+```
+
+this returns something like:
+
+```text
 StartRun request:
 {
   "workflowId": "4974161",
@@ -207,8 +265,14 @@ StartRun response:
 ```
 
 It is possible to override a request parameter from the original run. The following example tags the new run, which is particularly useful as tags are not propagated from the original run.
-```txt
-> omics-rerun 1234567 --tag=myKey=myValue
+
+```bash
+python -m omics.cli.rerun 1234567 --tag=myKey=myValue
+
+```
+
+this returns something like:
+```text
 StartRun request:
 {
   "workflowId": "4974161",
@@ -235,8 +299,12 @@ StartRun response:
 ```
 
 Before submitting a rerun request, it is possible to dry-run to view the new StartRun request:
-```txt
-> omics-rerun -d 1234567
+```bash
+python -m omics.cli.rerun -d 1234567
+```
+
+this returns something like:
+```text
 StartRun request:
 {
   "workflowId": "4974161",
@@ -250,22 +318,37 @@ StartRun request:
 }
 ```
 
-## Using the Omics Run Analyzer tool
-### Basic Usage
+### Omics Run Analyzer
 The `omics-run-analyzer` tool retrieves a workflow run manifest from CloudWatchLogs and generates statistics for the run, including CPU and memory utilization for each workflow task.
+
+For an overview of what it does and available options run:
+
+```bash
+python -m omics.cli.run_analyzer -h
+```
 
 #### List completed runs
 The following example lists all workflow runs completed in the past 5 days:
-```txt
-> omics-run-analyzer -t5d
+```bash
+python -m omics.cli.run_analyzer -t5d
+```
+
+this returns something like:
+
+```text
 Workflow run IDs (<completionTime> <UUID>):
 1234567 (2024-02-01T12:00:00 12345678-1234-5678-9abc-123456789012)
 2345678 (2024-02-03T13:00:00 12345678-1234-5678-9abc-123456789012)
 ```
 
 #### Analyze a specific workflow run
-```txt
-> omics-run-analyzer 1234567 -o run-1234567.csv
+```bash
+python -m omics.cli.run_analyzer 1234567 -o run-1234567.csv
+```
+
+this returns something like:
+
+```text
 omics-run-analyzer: wrote run-1234567.csv
 ```
 
@@ -296,8 +379,13 @@ The CSV output by the command above includes the following columns:
 * __storageAverageGiB__ : Average gibibytes of storage used by the workflow run
 
 #### Output workflow run manifest in JSON format
-```txt
-> omics-run-analyzer 1234567 -s -o run-1234567.json
+
+```bash
+python -m omics.cli.run_analyzer 1234567 -s -o run-1234567.json
+```
+
+this returns something like:
+```text
 omics-run-analyzer: wrote run-1234567.json
 ```
 
