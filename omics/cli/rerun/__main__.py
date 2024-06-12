@@ -77,8 +77,9 @@ def stream_to_run(strm):
     m = re.match(r"^manifest/run/(\d+)/[a-f0-9-]+$", strm["logStreamName"])
     if not m:
         return None
-    creation_time = datetime.datetime.fromtimestamp(
-        strm["creationTime"] / 1000.0).isoformat(timespec="milliseconds")
+    creation_time = datetime.datetime.fromtimestamp(strm["creationTime"] / 1000.0).isoformat(
+        timespec="milliseconds"
+    )
     return {
         "id": m.group(1),
         "creationTime": creation_time,
@@ -88,10 +89,12 @@ def stream_to_run(strm):
 
 def get_streams(logs, rqst, opts={}):
     """Get matching CloudWatch Log streams"""
-    start_time = dateutil.parser.parse(
-        opts["--start"]).timestamp() * 1000.0 if opts.get("--start") else None
-    end_time = dateutil.parser.parse(
-        opts["--end"]).timestamp() * 1000.0 if opts.get("--end") else None
+    start_time = (
+        dateutil.parser.parse(opts["--start"]).timestamp() * 1000.0 if opts.get("--start") else None
+    )
+    end_time = (
+        dateutil.parser.parse(opts["--end"]).timestamp() * 1000.0 if opts.get("--end") else None
+    )
     streams = []
     while True:
         try:
@@ -132,7 +135,7 @@ def get_runs(logs, runs, opts):
         # Get runs in time range
         rqst = {
             "logGroupName": "/aws/omics/WorkflowLog",
-            "logStreamNamePrefix": f"manifest/run/",
+            "logStreamNamePrefix": "manifest/run/",
         }
         streams.extend(get_streams(logs, rqst, opts))
     runs = [stream_to_run(s) for s in streams]
@@ -163,6 +166,7 @@ def get_run_resources(logs, run):
 
 def start_run_request(run, opts={}):
     """Build StartRun request"""
+
     def set_param(rqst, key, key0, val=None):
         if not val and opts and key0:
             val = opts[key0]
@@ -240,8 +244,7 @@ if __name__ == "__main__":
             out.write(f"{r['id']} ({r['creationTime']})\n")
     else:
         resources = get_run_resources(logs, runs[0])
-        run = [r for r in resources if r["arn"].endswith(
-            f"run/{runs[0]['id']}")]
+        run = [r for r in resources if r["arn"].endswith(f"run/{runs[0]['id']}")]
         run = run[0] if run else None
         if not resources:
             die("no workflow run resources")
@@ -254,8 +257,7 @@ if __name__ == "__main__":
             rqst0 = start_run_request(run)
             rqst = start_run_request(run, opts)
             if rqst != rqst0:
-                out.write(
-                    f"Original request:\n{json.dumps(rqst0, indent=2)}\n")
+                out.write(f"Original request:\n{json.dumps(rqst0, indent=2)}\n")
             out.write(f"StartRun request:\n{json.dumps(rqst, indent=2)}\n")
             if not opts["--dry-run"]:
                 try:
@@ -263,11 +265,9 @@ if __name__ == "__main__":
                     resp = omics.start_run(**rqst)
                 except Exception as e:
                     die(f"StartRun failed: {e}")
-                del resp["ResponseMetadata"]
-                out.write(
-                    f"StartRun response:\n{json.dumps(resp, indent=2)}\n")
+                del resp["ResponseMetadata"]  # type: ignore
+                out.write(f"StartRun response:\n{json.dumps(resp, indent=2)}\n")
 
     if opts["--out"]:
         out.close()
         sys.stderr.write(f"{exename}: wrote {opts['--out']}\n")
-

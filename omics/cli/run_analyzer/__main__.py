@@ -49,10 +49,11 @@ OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
 OMICS_SERVICE_CODE = "AmazonOmics"
 PRICING_AWS_REGION = "us-east-1"  # Pricing service endpoint
 SECS_PER_HOUR = 3600.0
-STORAGE_TYPE_DYNAMIC_RUN_STORAGE="DYNAMIC"
-STORAGE_TYPE_STATIC_RUN_STORAGE="STATIC"
-PRICE_RESOURCE_TYPE_DYNAMIC_RUN_STORAGE="Dynamic Run Storage"
-PRICE_RESOURCE_TYPE_STATIC_RUN_STORAGE="Run Storage"
+STORAGE_TYPE_DYNAMIC_RUN_STORAGE = "DYNAMIC"
+STORAGE_TYPE_STATIC_RUN_STORAGE = "STATIC"
+PRICE_RESOURCE_TYPE_DYNAMIC_RUN_STORAGE = "Dynamic Run Storage"
+PRICE_RESOURCE_TYPE_STATIC_RUN_STORAGE = "Run Storage"
+
 
 def die(msg):
     """Show error message and terminate"""
@@ -323,7 +324,7 @@ def add_metrics(res, resources, pricing):
     storage_type = res.get("storageType")
 
     if rtype == "run":
-        # Get capacity requested (static), capacity max. used (dynamic) and 
+        # Get capacity requested (static), capacity max. used (dynamic) and
         # charged storage (the requested capacity for static or average used for dynamic)
         if storage_type == STORAGE_TYPE_STATIC_RUN_STORAGE:
             price_resource_type = PRICE_RESOURCE_TYPE_STATIC_RUN_STORAGE
@@ -340,7 +341,7 @@ def add_metrics(res, resources, pricing):
         price = get_pricing(pricing, price_resource_type, region, gib_hrs)
         if price:
             metrics["estimatedUSD"] = price
-            
+
         # Get price for optimal static storage
         if store_max:
             capacity = get_static_storage_gib(store_max)
