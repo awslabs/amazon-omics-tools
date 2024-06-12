@@ -135,7 +135,7 @@ def get_runs(logs, runs, opts):
         # Get runs in time range
         rqst = {
             "logGroupName": "/aws/omics/WorkflowLog",
-            "logStreamNamePrefix": f"manifest/run/",
+            "logStreamNamePrefix": "manifest/run/",
         }
         streams.extend(get_streams(logs, rqst, opts))
     runs = [stream_to_run(s) for s in streams]
