@@ -360,13 +360,16 @@ The CSV output by the command above includes the following columns:
 * __startTime__ : Start timestamp for the workflow run or task (UTC time)
 * __stopTime__ : Stop timestamp for the workflow run or task (UTC time)
 * __runningSeconds__ : Approximate workflow run or task runtime (in seconds)
+* __cpusRequested__ : The number of vCPU requested by the workflow task
+* __gpusRequested__ : The number of GPUs requested by the workflow task
+* __memoryRequestedGiB__ : Gibibytes of memory requested by the workflow task
 * __sizeReserved__ : Requested storage capacity (workflow run) or Omics instance size (workflow task)
 * __sizeMinimum__ : Minimum recommended storage capacity or Omics instance size, based on the measured storage/CPU/memory utilization
-* __estimatedUSD__ : Estimated Omics charges (USD) based on _sizeReserved_ and _runningSeconds_
-* __minimumUSD__ : Estimated Omics charges (USD) based on _sizeMinimum_ and _runningSeconds_
-* __cpuUtilization__ : CPU utilization (_cpusMaximum_ / _cpusReserved_) for workflow task(s)
-* __memoryUtilization__ : Memory utilization (_memoryMaximumGiB_ / _memoryReservedGiB_) for the workflow task(s)
-* __storageUtilization__ : Storage utilization (_storageMaximumGiB_ / _storageReservedGiB_) for the workflow run
+* __estimatedUSD__ : Estimated Omics charges (USD) for the workflow based on _sizeReserved_ and _runningSeconds_
+* __minimumUSD__ : Estimated Omics charges (USD) for the workflow based on the recommended _sizeMinimum_ and _runningSeconds_
+* __cpuUtilizationRatio__ : CPU utilization (_cpusMaximum_ / _cpusReserved_) for workflow task(s)
+* __memoryUtilizationRatio__ : Memory utilization (_memoryMaximumGiB_ / _memoryReservedGiB_) for the workflow task(s)
+* __storageUtilizationRatio__ : Storage utilization (_storageMaximumGiB_ / _storageReservedGiB_) for the workflow run
 * __cpusReserved__ : vCPUs reserved for workflow task(s)
 * __cpusMaximum__ : Maximum vCPUs used during a single 1-minute interval
 * __cpusAverage__ : Average vCPUs used by workflow task(s)
