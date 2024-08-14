@@ -164,6 +164,13 @@ def get_run_resources(logs, run):
     return sorted(resources, key=lambda x: x.get("creationTime"))
 
 
+def get_workflow_type(run):
+    """Get workflow type"""
+    if not run.get("workflow", None) or len(run["workflow"].split(":")) < 5:
+        die(f"Failed to retrieve workflow type from run {run['arn']}")
+    return "READY2RUN" if not run["workflow"].split(":")[4] else "PRIVATE"
+
+
 def start_run_request(run, opts={}):
     """Build StartRun request"""
 
@@ -178,18 +185,17 @@ def start_run_request(run, opts={}):
     rqst = {}
     if opts.get("--workflow-id"):
         set_param(rqst, "workflowId", "--workflow-id")
-        if opts.get("--workflow-type"):
-            rqst["workflowType"] = opts["--workflow-type"]
     elif opts.get("--run-id"):
         set_param(rqst, "runId", "--run-id")
     elif run.get("run"):
         set_param(rqst, "runId", None, run["run"].split("/")[-1])
     else:
         set_param(rqst, "workflowId", None, run["workflow"].split("/")[-1])
-        if opts.get("--workflow-type"):
-            rqst["workflowType"] = opts["--workflow-type"]
-        elif not run["workflow"].split(":")[4]:
-            rqst["workflowType"] = "READY2RUN"
+
+    if opts.get("--workflow-type"):
+        set_param(rqst, "workflowType", "--workflow-type")
+    else:
+        rqst["workflowType"] = get_workflow_type(run)
 
     set_param(rqst, "roleArn", "--role-arn")
     set_param(rqst, "name", "--name")
