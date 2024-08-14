@@ -309,17 +309,17 @@ def add_metrics(res, resources, pricing):
     cpus_res = metrics.get("cpusReserved")
     cpus_max = metrics.get("cpusMaximum")
     if cpus_res and cpus_max:
-        metrics["cpuUtilization"] = float(cpus_max) / float(cpus_res)
+        metrics["cpuUtilizationRatio"] = float(cpus_max) / float(cpus_res)
     gpus_res = metrics.get("gpusReserved")
     mem_res = metrics.get("memoryReservedGiB")
     mem_max = metrics.get("memoryMaximumGiB")
     if mem_res and mem_max:
-        metrics["memoryUtilization"] = float(mem_max) / float(mem_res)
+        metrics["memoryUtilizationRatio"] = float(mem_max) / float(mem_res)
     store_res = metrics.get("storageReservedGiB")
     store_max = metrics.get("storageMaximumGiB")
     store_avg = metrics.get("storageAverageGiB")
     if store_res and store_max:
-        metrics["storageUtilization"] = float(store_max) / float(store_res)
+        metrics["storageUtilizationRatio"] = float(store_max) / float(store_res)
 
     storage_type = res.get("storageType")
 
@@ -459,9 +459,9 @@ if __name__ == "__main__":
                 "sizeMinimum",
                 "estimatedUSD",
                 "minimumUSD",
-                "cpuUtilization",
-                "memoryUtilization",
-                "storageUtilization",
+                "cpuUtilizationRatio",
+                "memoryUtilizationRatio",
+                "storageUtilizationRatio",
                 "cpusReserved",
                 "cpusMaximum",
                 "cpusAverage",
@@ -478,7 +478,7 @@ if __name__ == "__main__":
             hrdrs_map = {
                 "cpus": "cpusRequested",
                 "gpus": "gpusRequested",
-                "memory": "memoryRequested",
+                "memory": "memoryRequestedGiB",
             }
 
             formatted_headers = [hrdrs_map.get(h, h) for h in hdrs]
