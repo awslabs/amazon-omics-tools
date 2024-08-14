@@ -163,10 +163,13 @@ def get_run_resources(logs, run):
         rqst["nextToken"] = token
     return sorted(resources, key=lambda x: x.get("creationTime"))
 
+
 def get_workflow_type(run):
+    """Get workflow type"""
     if not run.get("workflow", None) or len(run["workflow"].split(":")) < 5:
         die(f"Failed to retrieve workflow type from run {run['arn']}")
     return "READY2RUN" if not run["workflow"].split(":")[4] else "PRIVATE"
+
 
 def start_run_request(run, opts={}):
     """Build StartRun request"""
