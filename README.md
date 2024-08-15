@@ -363,10 +363,10 @@ The CSV output by the command above includes the following columns:
 * __cpusRequested__ : The number of vCPU requested by the workflow task
 * __gpusRequested__ : The number of GPUs requested by the workflow task
 * __memoryRequestedGiB__ : Gibibytes of memory requested by the workflow task
-* __sizeReserved__ : Requested storage capacity (workflow run) or Omics instance size (workflow task)
-* __sizeMinimum__ : Minimum recommended storage capacity or Omics instance size, based on the measured storage/CPU/memory utilization
+* __omicsInstanceTypeReserved__ : Requested Omics instance type for each task
+* __omicsInstanceTypeMinimum__ : Minimum Omics instance type that could run each task. 
 * __estimatedUSD__ : Estimated Omics charges (USD) for the workflow based on _sizeReserved_ and _runningSeconds_
-* __minimumUSD__ : Estimated Omics charges (USD) for the workflow based on the recommended _sizeMinimum_ and _runningSeconds_
+* __minimumUSD__ : Estimated Omics charges (USD) for the workflow based on the recommended _omicsInstanceTypeMinimum_ and _runningSeconds_
 * __cpuUtilizationRatio__ : CPU utilization (_cpusMaximum_ / _cpusReserved_) for workflow task(s)
 * __memoryUtilizationRatio__ : Memory utilization (_memoryMaximumGiB_ / _memoryReservedGiB_) for the workflow task(s)
 * __storageUtilizationRatio__ : Storage utilization (_storageMaximumGiB_ / _storageReservedGiB_) for the workflow run
