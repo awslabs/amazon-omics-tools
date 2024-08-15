@@ -336,7 +336,6 @@ def add_metrics(res, resources, pricing):
             charged = store_avg
 
         # Get price for actually used storage (approx. for dynamic storage)
-        metrics["sizeReserved"] = f"{capacity} GiB"
         gib_hrs = charged * running / SECS_PER_HOUR
         price = get_pricing(pricing, price_resource_type, region, gib_hrs)
         if price:
@@ -345,7 +344,6 @@ def add_metrics(res, resources, pricing):
         # Get price for optimal static storage
         if store_max:
             capacity = get_static_storage_gib(store_max)
-        metrics["sizeMinimum"] = f"{capacity} GiB"
         gib_hrs = capacity * running / SECS_PER_HOUR
         price = get_pricing(pricing, PRICE_RESOURCE_TYPE_STATIC_RUN_STORAGE, region, gib_hrs)
         if price:
@@ -353,13 +351,13 @@ def add_metrics(res, resources, pricing):
 
     elif "instanceType" in res:
         itype = res["instanceType"]
-        metrics["sizeReserved"] = itype
+        metrics["omicsInstanceTypeReserved"] = itype
         price = get_pricing(pricing, itype, region, running / SECS_PER_HOUR)
         if price:
             metrics["estimatedUSD"] = price
         if cpus_max and mem_max and not gpus_res:
             itype = get_instance(cpus_max, mem_max)
-        metrics["sizeMinimum"] = itype
+        metrics["omicsInstanceTypeMinimum"] = itype
         price = get_pricing(pricing, itype, region, running / SECS_PER_HOUR)
         if price:
             metrics["minimumUSD"] = price
@@ -455,8 +453,8 @@ if __name__ == "__main__":
                 "cpus",
                 "gpus",
                 "memory",
-                "sizeReserved",
-                "sizeMinimum",
+                "omicsInstanceTypeReserved",
+                "omicsInstanceTypeMinimum",
                 "estimatedUSD",
                 "minimumUSD",
                 "cpuUtilizationRatio",
