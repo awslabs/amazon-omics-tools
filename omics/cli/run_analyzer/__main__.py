@@ -337,7 +337,7 @@ def add_metrics(res, resources, pricing):
             price_resource_type = PRICE_RESOURCE_TYPE_DYNAMIC_RUN_STORAGE
             capacity = store_max
             charged = store_avg
-            
+
         # Get price for actually used storage (approx. for dynamic storage)
         gib_hrs = charged * running / SECS_PER_HOUR
         price = get_pricing(pricing, price_resource_type, region, gib_hrs)
