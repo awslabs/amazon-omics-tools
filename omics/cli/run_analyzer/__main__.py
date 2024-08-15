@@ -318,9 +318,9 @@ def add_metrics(res, resources, pricing):
     mem_max = metrics.get("memoryMaximumGiB")
     if mem_res and mem_max:
         metrics["memoryUtilizationRatio"] = float(mem_max) / float(mem_res)
-    store_res = metrics.get("storageReservedGiB")
-    store_max = metrics.get("storageMaximumGiB")
-    store_avg = metrics.get("storageAverageGiB")
+    store_res = metrics.get("storageReservedGiB", 0.0)
+    store_max = metrics.get("storageMaximumGiB", 0.0)
+    store_avg = metrics.get("storageAverageGiB", 0.0)
     if store_res and store_max:
         metrics["storageUtilizationRatio"] = float(store_max) / float(store_res)
 
@@ -337,7 +337,7 @@ def add_metrics(res, resources, pricing):
             price_resource_type = PRICE_RESOURCE_TYPE_DYNAMIC_RUN_STORAGE
             capacity = store_max
             charged = store_avg
-
+            
         # Get price for actually used storage (approx. for dynamic storage)
         gib_hrs = charged * running / SECS_PER_HOUR
         price = get_pricing(pricing, price_resource_type, region, gib_hrs)
