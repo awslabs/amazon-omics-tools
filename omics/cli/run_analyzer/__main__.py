@@ -294,12 +294,10 @@ def add_metrics(res, resources, pricing):
     region = arn[3]
     res["type"] = rtype
 
-    # if a run has no metrics body then we can skip the rest
-    if rtype == "run" and not res["metrics"]:
-        return
-
     metrics = res.get("metrics", {})
-    res["metrics"] = metrics
+    # if a resource has no metrics body then we can skip the rest
+    if res.get("metrics") is None:
+        return
 
     if rtype == "run":
         add_run_util(res, resources[1:])
