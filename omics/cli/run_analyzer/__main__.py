@@ -289,13 +289,18 @@ def add_run_util(run, tasks):
 
 def add_metrics(res, resources, pricing):
     """Add run/task metrics"""
-    metrics = res.get("metrics", {})
-    res["metrics"] = metrics
-
     arn = re.split(r"[:/]", res["arn"])
     rtype = arn[-2]
     region = arn[3]
     res["type"] = rtype
+
+    # if a run has no metrics body then we can skip the rest
+    if rtype == "run" and not res["metrics"]:
+        return
+
+    metrics = res.get("metrics", {})
+    res["metrics"] = metrics
+
     if rtype == "run":
         add_run_util(res, resources[1:])
 
