@@ -44,7 +44,7 @@ pip install ./amazon-omics-tools
 ### Omics Transfer Manager
 
 #### Basic Usage
-The `TransferManager` class makes it easy to download files for an Omics reference or read set.  By default the files are saved to the current directory, or you can specify a custom location with the `directory` parameter.
+The `TransferManager` class makes it easy to download files from a AWS HealthOmics reference or read set.  By default the files are saved to the current directory, or you can specify a custom location with the `directory` parameter.
 
 ```python
 import boto3
@@ -144,8 +144,8 @@ manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>")
 
 ### Omics URI Parser
 
-The `OmicsUriParser` class makes it easy to parse omics readset and reference URIs to extract fields relevant for calling 
-AWS omics APIs.
+The `OmicsUriParser` class makes it easy to parse AWS HealthOmics readset and reference URIs to extract fields relevant for calling 
+AWS HealthOmics APIs.
 
 
 #### Readset file URI: 
@@ -171,7 +171,7 @@ For example:
 omics://123412341234.storage.us-east-1.amazonaws.com/5432154321/reference/5346184667/source
 ```
 
-To handle both Omics URI types, you would use code like the following:
+To handle both HealthOmics URI types, you would use code like the following:
 
 ```python
 import boto3
@@ -185,7 +185,7 @@ client = boto3.client("omics")
 readset = OmicsUriParser(READSET_URI_STRING).parse()
 reference = OmicsUriParser(REFERENCE_URI_STRING).parse()
 
-# use the parsed fields from the URIs to call omics APIs:
+# use the parsed fields from the URIs to call AWS HealthOmics APIs:
 
 manager = TransferManager(client)
 
@@ -363,10 +363,10 @@ The CSV output by the command above includes the following columns:
 * __cpusRequested__ : The number of vCPU requested by the workflow task
 * __gpusRequested__ : The number of GPUs requested by the workflow task
 * __memoryRequestedGiB__ : Gibibytes of memory requested by the workflow task
-* __omicsInstanceTypeReserved__ : Requested Omics instance type for each task
-* __omicsInstanceTypeMinimum__ : Minimum Omics instance type that could run each task. 
-* __estimatedUSD__ : Estimated Omics charges (USD) for the workflow based on _sizeReserved_ and _runningSeconds_
-* __minimumUSD__ : Estimated Omics charges (USD) for the workflow based on the recommended _omicsInstanceTypeMinimum_ and _runningSeconds_
+* __omicsInstanceTypeReserved__ : Requested HealthOmics instance type for each task
+* __omicsInstanceTypeMinimum__ : Minimum HealthOmics instance type that could run each task. 
+* __estimatedUSD__ : Estimated HealthOmics charges (USD) for the workflow based on _sizeReserved_ and _runningSeconds_
+* __minimumUSD__ : Estimated HealthOmics charges (USD) for the workflow based on the recommended _omicsInstanceTypeMinimum_ and _runningSeconds_
 * __cpuUtilizationRatio__ : CPU utilization (_cpusMaximum_ / _cpusReserved_) for workflow task(s)
 * __memoryUtilizationRatio__ : Memory utilization (_memoryMaximumGiB_ / _memoryReservedGiB_) for the workflow task(s)
 * __storageUtilizationRatio__ : Storage utilization (_storageMaximumGiB_ / _storageReservedGiB_) for the workflow run
