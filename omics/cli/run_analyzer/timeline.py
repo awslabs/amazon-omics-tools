@@ -69,6 +69,7 @@ def get_task_timings_data(tasks, time_units='min'):
         
         task['label'] = f"({task['arn']}) {task['name']}"
         task['text_x'] = ((parse_time_str(task['stopTime']) - tare).total_seconds() + 30) * time_scale_factor
+        task['estimatedUSD'] = task['metrics'].get('estimatedUSD', 0.0)
 
         tasks[i] = task
     
@@ -90,10 +91,8 @@ def plot_timeline(tasks, title="", time_units='min', max_duration_hrs=5, show_pl
         ("queued", f"@queued_duration {time_units}"),
         ("duration", f"@running_duration {time_units}"),
         ("status", "@status"),
+        ("est. cost", "@estimatedUSD")
     ]
-
-    if 'metrics' in data.columns:
-        tooltips.append(("est cost", "@metrics['estimatedCost'] USD"))
 
     p_run = figure(width=960, height=800, sizing_mode="stretch_both", tooltips=tooltips)
     p_run.hbar(y='y', left='queued_left', right='queued_right', height=0.8, color='lightgrey', source=source, legend_label="queued")
@@ -106,50 +105,51 @@ def plot_timeline(tasks, title="", time_units='min', max_duration_hrs=5, show_pl
     p_run.xaxis.axis_label = f"task execution time ({time_units})"
     p_run.yaxis.visible = False
     p_run.legend.location = "top_right"
+    max_stop_time = data['stopTime'].max()
+    min_creation_time = data['creationTime'].min()
     p_run.title.text = (
         f"tasks: {len(tasks)}, "
-        f"wall time: {(data['stopTime'].max() - data['creationTime'].min()).total_seconds() * time_scale_factor:.2f} {time_units}"
+        f"wall time: {(parse_time_str(max_stop_time) - parse_time_str(min_creation_time)).total_seconds() * time_scale_factor:.2f} {time_units}"
     )
 
-    p_cpu = figure(width=160, y_range=p_run.y_range, sizing_mode="stretch_height", tooltips=tooltips)
-    p_cpu.hbar(y='y', right='cpus', height=0.8, color="darkgrey", source=source)
-    p_cpu.x_range = Range1d(-1, data['cpus'].max())
-    p_cpu.xaxis.axis_label = "vcpus"
-    p_cpu.yaxis.visible = False
-    p_cpu.title.text = f"max cpus: {max(source.data['cpus'])}"
+    # p_cpu = figure(width=160, y_range=p_run.y_range, sizing_mode="stretch_height", tooltips=tooltips)
+    # p_cpu.hbar(y='y', right='cpus', height=0.8, color="darkgrey", source=source)
+    # p_cpu.x_range = Range1d(-1, data['cpus'].max())
+    # p_cpu.xaxis.axis_label = "vcpus"
+    # p_cpu.yaxis.visible = False
+    # p_cpu.title.text = f"max cpus: {max(source.data['cpus'])}"
     
-    p_mem = figure(width=160, y_range=p_run.y_range, sizing_mode="stretch_height", tooltips=tooltips)
-    p_mem.hbar(y='y', right='memory', height=0.8, color="darkgrey", source=source)
-    p_mem.x_range = Range1d(-1, data['memory'].max())
-    p_mem.xaxis.axis_label = "memory (GiB)"
-    p_mem.yaxis.visible = False
-    p_mem.title.text = f"max mem: {max(source.data['memory']):.2f} GiB"
+    # p_mem = figure(width=160, y_range=p_run.y_range, sizing_mode="stretch_height", tooltips=tooltips)
+    # p_mem.hbar(y='y', right='memory', height=0.8, color="darkgrey", source=source)
+    # p_mem.x_range = Range1d(-1, data['memory'].max())
+    # p_mem.xaxis.axis_label = "memory (GiB)"
+    # p_mem.yaxis.visible = False
+    # p_mem.title.text = f"max mem: {max(source.data['memory']):.2f} GiB"
 
-    p_mcr = figure(width=160, y_range=p_run.y_range, sizing_mode="stretch_height", tooltips=tooltips)
-    p_mcr.hbar(y='y', right='memory_to_cpus', height=0.8, color="darkslateblue", source=source)
-    p_mcr.ray(x=[2, 4, 8], y=-1, length=0, angle=90, angle_units="deg", color="darkred")
-    p_mcr.x_range = Range1d(-0.01, data['memory_to_cpus'].max())
-    p_mcr.xaxis.axis_label = "memory/vcpus"
-    p_mcr.yaxis.visible = False
-    p_mcr.title.text = f"max mem/vcpus: {max(source.data['memory_to_cpus']):.2f}"
+    # p_mcr = figure(width=160, y_range=p_run.y_range, sizing_mode="stretch_height", tooltips=tooltips)
+    # p_mcr.hbar(y='y', right='memory_to_cpus', height=0.8, color="darkslateblue", source=source)
+    # p_mcr.ray(x=[2, 4, 8], y=-1, length=0, angle=90, angle_units="deg", color="darkred")
+    # p_mcr.x_range = Range1d(-0.01, data['memory_to_cpus'].max())
+    # p_mcr.xaxis.axis_label = "memory/vcpus"
+    # p_mcr.yaxis.visible = False
+    # p_mcr.title.text = f"max mem/vcpus: {max(source.data['memory_to_cpus']):.2f}"
 
-    plots = [p_cpu, p_mem, p_mcr, p_run]
+    #plots = [p_cpu, p_mem, p_mcr, p_run]
 
-    if pricing and 'cost_usd' in data.columns:
-        p_usd = figure(width=160, y_range=p_run.y_range, sizing_mode="stretch_height", tooltips=tooltips)
-        p_usd.hbar(y='y', right='cost_usd', height=0.8, color="limegreen", source=source)
-        p_usd.x_range = Range1d(-0.01, data['cost_usd'].max())
-        p_usd.xaxis.axis_label = "cost ($)"
-        p_usd.yaxis.visible = False
-        p_usd.title.text = f"tot. task cost: ${sum(source.data['cost_usd']):.2f}"
+    # p_usd = figure(width=160, y_range=p_run.y_range, sizing_mode="stretch_height", tooltips=tooltips)
+    # p_usd.hbar(y='y', right='est_cost_usd', height=0.8, color="limegreen", source=source)
+    # p_usd.x_range = Range1d(-0.01, data['estimatedUSD'].max())
+    # p_usd.xaxis.axis_label = "estimated cost (USD)"
+    # p_usd.yaxis.visible = False
+    # p_usd.title.text = f"est. tot. task cost: ${sum(source.data['estimatedUSD']):.2f}"
 
-        plots = [p_usd] + plots
+    # plots = [p_usd] + plots
 
-    g = gridplot(plots, ncols=len(plots), toolbar_location="right")
-    layout = column(Div(text=f"<strong>{title}</strong>"), g)
+    #g = gridplot(plots, ncols=len(plots), toolbar_location="right")
+    layout = column(Div(text=f"<strong>{title}</strong>"), p_run)
 
     if show_plot:
-        show(layout)
+        show(p_run)
     
     return layout
 
