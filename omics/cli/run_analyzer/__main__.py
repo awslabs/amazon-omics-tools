@@ -294,12 +294,10 @@ def add_metrics(res, resources, pricing):
     region = arn[3]
     res["type"] = rtype
 
-    # if a run has no metrics body then we can skip the rest
-    if rtype == "run" and not res["metrics"]:
-        return
-
     metrics = res.get("metrics", {})
-    res["metrics"] = metrics
+    # if a resource has no metrics body then we can skip the rest
+    if res.get("metrics") is None:
+        return
 
     if rtype == "run":
         add_run_util(res, resources[1:])
@@ -320,9 +318,9 @@ def add_metrics(res, resources, pricing):
     mem_max = metrics.get("memoryMaximumGiB")
     if mem_res and mem_max:
         metrics["memoryUtilizationRatio"] = float(mem_max) / float(mem_res)
-    store_res = metrics.get("storageReservedGiB")
-    store_max = metrics.get("storageMaximumGiB")
-    store_avg = metrics.get("storageAverageGiB")
+    store_res = metrics.get("storageReservedGiB", 0.0)
+    store_max = metrics.get("storageMaximumGiB", 0.0)
+    store_avg = metrics.get("storageAverageGiB", 0.0)
     if store_res and store_max:
         metrics["storageUtilizationRatio"] = float(store_max) / float(store_res)
 
