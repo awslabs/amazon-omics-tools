@@ -381,6 +381,9 @@ The CSV output by the command above includes the following columns:
 * __storageMaximumGiB__ : Maximum gibibytes of storage used during a single 1-minute interval
 * __storageAverageGiB__ : Average gibibytes of storage used by the workflow run
 
+> [!WARNING]  
+> At this time AWS HealthOmics does not report the average or maximum storage used by runs that use "DYNAMIC" storage that run for under two hours. Because of this limitation the `storageMaximumGiB` and `storageAverageGiB` are set to zero and will not be included in the estimate run cost.
+
 #### Produce a timeline plot for a run
 
 The RunAnalyzer tool can produce an interative timeline plot of a workflow. The plots allow you to visualize how individual tasks ran over the course of the run.
