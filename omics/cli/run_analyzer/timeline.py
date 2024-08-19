@@ -1,8 +1,7 @@
 import sys
 from datetime import datetime
 
-import boto3
-import pandas as pd
+import pandas as pd  # type: ignore
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, Div, Range1d
 from bokeh.plotting import figure, show
@@ -10,24 +9,6 @@ from bokeh.plotting import figure, show
 TIME_SCALE_FACTORS = {"sec": 1, "min": 1 / 60, "hr": 1 / 3600, "day": 1 / 86400}
 
 TASK_COLORS = {"COMPLETED": "cornflowerblue", "FAILED": "crimson", "CANCELLED": "orange"}
-
-
-def _get_tasks(runid, client=None):
-    if not client:
-        client = boto3.client("omics")
-
-    request = {"id": runid}
-    tasks = []
-    while True:
-        response = client.list_run_tasks(**request)
-        next_token = response.get("nextToken")
-        tasks += response.get("items")
-        if not next_token:
-            break
-        else:
-            request["startingToken"] = next_token
-
-    return tasks
 
 
 def _parse_time_str(time_str):
