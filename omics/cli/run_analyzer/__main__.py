@@ -46,8 +46,8 @@ import boto3
 import dateutil
 import dateutil.utils
 import docopt
+import timeline  # type: ignore
 from bokeh.plotting import output_file
-from timeline import plot_timeline # type: ignore
 
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
@@ -528,4 +528,4 @@ if __name__ == "__main__":
         )
         title = f"arn: {run['arn']}, name: {run.get('name')}"
 
-        plot_timeline(resources, title=title, max_duration_hrs=run_duration_hrs)
+        timeline.plot_timeline(resources, title=title, max_duration_hrs=run_duration_hrs)

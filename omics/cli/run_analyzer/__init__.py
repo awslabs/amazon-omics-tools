@@ -1,1 +1,1 @@
-from timeline import plot_timeline
+from . import timeline
