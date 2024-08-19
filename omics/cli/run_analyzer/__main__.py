@@ -92,7 +92,7 @@ def get_static_storage_gib(capacity=None):
 
 
 def get_instance(cpus, mem):
-    """Return smallest matching instance type"""
+    """Return a tuple of smallest matching instance type (str), cpus in that type (int), GiB memory of that type (int)"""
     sizes = {
         "": 2,
         "x": 4,
@@ -112,7 +112,7 @@ def get_instance(cpus, mem):
             mcount = ccount * families[fam]
             if mcount < mem:
                 continue
-            return f"omics.{fam}.{size}large"
+            return (f"omics.{fam}.{size}large", ccount, mcount)
     return ""
 
 
@@ -364,8 +364,14 @@ def add_metrics(res, resources, pricing):
         if price:
             metrics["estimatedUSD"] = price
         if cpus_max and mem_max and not gpus_res:
-            itype = get_instance(cpus_max, mem_max)
-        metrics["omicsInstanceTypeMinimum"] = itype
+            (itype, cpus, mem) = get_instance(cpus_max, mem_max)
+            metrics["omicsInstanceTypeMinimum"] = itype
+            metrics["recommendedCpus"] = cpus
+            metrics["recommendedMemoryGiB"] = mem
+        else:
+            metrics["omicsInstanceTypeMinimum"] = itype
+            metrics["recommendedCpus"] = cpus_res
+            metrics["recommendedMemoryGiB"] = mem_res
         price = get_pricing(pricing, itype, region, running / SECS_PER_HOUR)
         if price:
             metrics["minimumUSD"] = price
@@ -463,6 +469,8 @@ if __name__ == "__main__":
                 "memory",
                 "omicsInstanceTypeReserved",
                 "omicsInstanceTypeMinimum",
+                "recommendedCpus",
+                "recommendedMemoryGiB",
                 "estimatedUSD",
                 "minimumUSD",
                 "cpuUtilizationRatio",
