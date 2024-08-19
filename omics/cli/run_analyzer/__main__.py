@@ -42,14 +42,12 @@ import os
 import re
 import sys
 
-from bokeh.plotting import output_file
-
 import boto3
 import dateutil
 import dateutil.utils
 import docopt
-
 import timeline
+from bokeh.plotting import output_file
 
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
@@ -505,7 +503,7 @@ if __name__ == "__main__":
     if opts["--plot"]:
         if len(resources) < 1:
             die("no resources to plot")
-        
+
         run = {}
         for res in resources:
             rtype = re.split(r"[:/]", res["arn"])[-2]
@@ -517,15 +515,17 @@ if __name__ == "__main__":
         start = datetime.datetime.strptime(run["startTime"], "%Y-%m-%dT%H:%M:%S.%fZ")
         stop = datetime.datetime.strptime(run["stopTime"], "%Y-%m-%dT%H:%M:%S.%fZ")
         run_duration_hrs = (stop - start).total_seconds() / 3600
-        
+
         runid = run["arn"].split("/")[-1]
-        output_file_basename = f"{runid}_timeline"        
-        
+        output_file_basename = f"{runid}_timeline"
+
         # open or create the plot directory
         plot_dir = opts["--plot"]
         if not os.path.isdir(plot_dir):
             os.makedirs(plot_dir)
-        output_file(filename=os.path.join(plot_dir, f"{output_file_basename}.html"), title=runid, mode="cdn")
+        output_file(
+            filename=os.path.join(plot_dir, f"{output_file_basename}.html"), title=runid, mode="cdn"
+        )
         title = f"arn: {run['arn']}, name: {run.get('name')}"
 
         timeline.plot_timeline(resources, title=title, max_duration_hrs=run_duration_hrs)

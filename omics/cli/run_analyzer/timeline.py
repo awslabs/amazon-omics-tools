@@ -1,94 +1,95 @@
+import sys
 from datetime import datetime
 
-from bokeh.models import ColumnDataSource, Range1d, Div
-from bokeh.layouts import column
-from bokeh.plotting import figure, show
-from bokeh.resources import CDN
 import boto3
 import pandas as pd
-import sys
+from bokeh.layouts import column
+from bokeh.models import ColumnDataSource, Div, Range1d
+from bokeh.plotting import figure, show
+
+TIME_SCALE_FACTORS = {"sec": 1, "min": 1 / 60, "hr": 1 / 3600, "day": 1 / 86400}
+
+TASK_COLORS = {"COMPLETED": "cornflowerblue", "FAILED": "crimson", "CANCELLED": "orange"}
 
 
-TIME_SCALE_FACTORS = {
-    "sec": 1, "min": 1/60, "hr": 1/3600, "day": 1/86400
-}
-
-TASK_COLORS={'COMPLETED': 'cornflowerblue', 'FAILED': 'crimson', 'CANCELLED': 'orange'}
-
-def get_tasks(runid, client=None):
+def _get_tasks(runid, client=None):
     if not client:
-        client = boto3.client('omics')
-    
-    request = {"id": runid }
+        client = boto3.client("omics")
+
+    request = {"id": runid}
     tasks = []
     while True:
         response = client.list_run_tasks(**request)
         next_token = response.get("nextToken")
-        tasks += response.get('items')
+        tasks += response.get("items")
         if not next_token:
             break
         else:
             request["startingToken"] = next_token
-    
+
     return tasks
 
-def parse_time_str(time_str):
+
+def _parse_time_str(time_str):
     # if time_str is actually a datetime just return it
-    if isinstance(time_str, datetime): return time_str
+    if isinstance(time_str, datetime):
+        return time_str
 
     try:
         return datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ")
     except ValueError:
         return datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S%fZ")
-    
-def get_task_timings_data(tasks, time_units='min'):
+
+
+def _get_task_timings_data(tasks, time_units="min"):
     time_scale_factor = TIME_SCALE_FACTORS[time_units]
-    
+
     # remove tasks that don't have a creationTime
-    filtered_tasks = [task for task in tasks if task.get('creationTime')]
+    filtered_tasks = [task for task in tasks if task.get("creationTime")]
     if not filtered_tasks:
         print("No tasks found with timing data, a plot cannot be created", file=sys.stderr)
         return pd.DataFrame()
-    
-    tare = min([parse_time_str(task['creationTime']) for task in filtered_tasks])
+
+    tare = min([_parse_time_str(task["creationTime"]) for task in filtered_tasks])
 
     for i, task in enumerate(tasks):
-        if 'creationTime' not in task:
-            task['creationTime'] = tare
-            task['startTime'] = task['creationTime']
-            task['stopTime'] = task['creationTime']
+        if "creationTime" not in task:
+            task["creationTime"] = tare
+            task["startTime"] = task["creationTime"]
+            task["stopTime"] = task["creationTime"]
         else:
-            task['creationTime'] = parse_time_str(task['creationTime'])
-            task['startTime'] = parse_time_str(task['startTime'])
-            task['stopTime'] = parse_time_str(task['stopTime'])
-        task['cpus'] = task.get('cpus', 0)
-        task['gpus'] = task.get('gpus', 0)
-        task['memory'] = task.get('memory', 0)
-        task['instanceType'] = task.get('instanceType', 'N/A')
+            task["creationTime"] = _parse_time_str(task["creationTime"])
+            task["startTime"] = _parse_time_str(task["startTime"])
+            task["stopTime"] = _parse_time_str(task["stopTime"])
+        task["cpus"] = task.get("cpus", 0)
+        task["gpus"] = task.get("gpus", 0)
+        task["memory"] = task.get("memory", 0)
+        task["instanceType"] = task.get("instanceType", "N/A")
 
-        task['y'] = i
-        task['color'] = TASK_COLORS[task['status']]
-        
-        task['running_left'] = (task['startTime'] - tare).total_seconds() * time_scale_factor
-        task['running_right'] = (task['stopTime'] - tare).total_seconds() * time_scale_factor
-        task['running_duration'] = task['running_right'] - task['running_left']
+        task["y"] = i
+        task["color"] = TASK_COLORS[task["status"]]
 
-        task['queued_left'] = (task['creationTime'] - tare).total_seconds() * time_scale_factor
-        task['queued_right'] = task['running_left']
-        task['queued_duration'] = task['queued_right'] - task['queued_left']
-        
-        task['label'] = f"({task['arn']}) {task['name']}"
-        task['text_x'] = (task['stopTime'] - tare).total_seconds() + 30 * time_scale_factor
+        task["running_left"] = (task["startTime"] - tare).total_seconds() * time_scale_factor
+        task["running_right"] = (task["stopTime"] - tare).total_seconds() * time_scale_factor
+        task["running_duration"] = task["running_right"] - task["running_left"]
+
+        task["queued_left"] = (task["creationTime"] - tare).total_seconds() * time_scale_factor
+        task["queued_right"] = task["running_left"]
+        task["queued_duration"] = task["queued_right"] - task["queued_left"]
+
+        task["label"] = f"({task['arn']}) {task['name']}"
+        task["text_x"] = (task["stopTime"] - tare).total_seconds() + 30 * time_scale_factor
 
         tasks[i] = task
-        task['estimatedUSD'] = task['metrics'].get('estimatedUSD', 0.0)
-    
-    return pd.DataFrame.from_records(tasks).sort_values('creationTime')
+        task["estimatedUSD"] = task["metrics"].get("estimatedUSD", 0.0)
+
+    return pd.DataFrame.from_records(tasks).sort_values("creationTime")
 
 
-def plot_timeline(tasks, title="", time_units='min', max_duration_hrs=5, show_plot=True):
+def plot_timeline(tasks, title="", time_units="min", max_duration_hrs=5, show_plot=True):
+    """Plot a time line figure for supplied tasks"""
     time_scale_factor = TIME_SCALE_FACTORS[time_units]
-    data = get_task_timings_data(tasks, time_units=time_units)
+    data = _get_task_timings_data(tasks, time_units=time_units)
 
     source = ColumnDataSource(data)
 
@@ -102,32 +103,56 @@ def plot_timeline(tasks, title="", time_units='min', max_duration_hrs=5, show_pl
         ("queued", f"@queued_duration {time_units}"),
         ("duration", f"@running_duration {time_units}"),
         ("status", "@status"),
-        ("est. cost USD", "@estimatedUSD")
+        ("est. cost USD", "@estimatedUSD"),
     ]
 
     p_run = figure(width=960, height=800, sizing_mode="stretch_both", tooltips=tooltips)
-    p_run.hbar(y='y', left='queued_left', right='queued_right', height=0.8, color='lightgrey', source=source, legend_label="queued")
-    p_run.hbar(y='y', left='running_left', right='running_right', height=0.8, color='color', source=source, legend_label="running")
+    p_run.hbar(
+        y="y",
+        left="queued_left",
+        right="queued_right",
+        height=0.8,
+        color="lightgrey",
+        source=source,
+        legend_label="queued",
+    )
+    p_run.hbar(
+        y="y",
+        left="running_left",
+        right="running_right",
+        height=0.8,
+        color="color",
+        source=source,
+        legend_label="running",
+    )
     if len(data) < 50:
-        p_run.text(x='text_x', y='y', text='name', alpha=0.4, text_baseline='middle', text_font_size='1.5ex', source=source)
-    x_max = max_duration_hrs*3600 * time_scale_factor # max expected workflow duration in hours
+        p_run.text(
+            x="text_x",
+            y="y",
+            text="name",
+            alpha=0.4,
+            text_baseline="middle",
+            text_font_size="1.5ex",
+            source=source,
+        )
+    x_max = max_duration_hrs * 3600 * time_scale_factor  # max expected workflow duration in hours
     x_min = -(x_max * 0.05)
     p_run.x_range = Range1d(x_min, x_max)
     p_run.y_range.flipped = False
     p_run.xaxis.axis_label = f"task execution time ({time_units})"
     p_run.yaxis.visible = False
     p_run.legend.location = "top_right"
-    max_stop_time = data['stopTime'].max()
-    min_creation_time = data['creationTime'].min()
+    max_stop_time = data["stopTime"].max()
+    min_creation_time = data["creationTime"].min()
     p_run.title.text = (
         f"{title}, "
         f"tasks: {len(tasks)}, "
-        f"wall time: {(parse_time_str(max_stop_time) - parse_time_str(min_creation_time)).total_seconds() * time_scale_factor:.2f} {time_units}"
+        f"wall time: {(_parse_time_str(max_stop_time) - _parse_time_str(min_creation_time)).total_seconds() * time_scale_factor:.2f} {time_units}"
     )
 
     layout = column(Div(text=f"<strong>{title}</strong>"), p_run)
 
     if show_plot:
         show(p_run)
-    
+
     return layout
