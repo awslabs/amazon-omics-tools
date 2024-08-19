@@ -381,6 +381,16 @@ The CSV output by the command above includes the following columns:
 * __storageMaximumGiB__ : Maximum gibibytes of storage used during a single 1-minute interval
 * __storageAverageGiB__ : Average gibibytes of storage used by the workflow run
 
+#### Produce a timeline plot for a run
+
+The RunAnalyzer tool can produce an interative timeline plot of a workflow. The plots allow you to visualize how individual tasks ran over the course of the run.
+
+```bash
+python -m omics.cli.run_analyzer -P plots/ 7113639
+```
+
+![Example time line image showing stacked horizontal bars indicating the time taken by each task](./assets/timeline.png)
+
 #### Output workflow run manifest in JSON format
 
 ```bash
