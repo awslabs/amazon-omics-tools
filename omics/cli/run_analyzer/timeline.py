@@ -62,7 +62,7 @@ def _get_task_timings_data(tasks, time_units="min"):
         task["text_x"] = (task["stopTime"] - tare).total_seconds() + 30 * time_scale_factor
 
         tasks[i] = task
-        task["estimatedUSD"] = task["metrics"].get("estimatedUSD", 0.0)
+        task["estimatedUSD"] = task.get("metrics", {}).get("estimatedUSD", 0.0)
 
     return pd.DataFrame.from_records(tasks).sort_values("creationTime")
 
