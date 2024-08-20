@@ -46,8 +46,9 @@ import boto3
 import dateutil
 import dateutil.utils
 import docopt
-import timeline  # type: ignore
 from bokeh.plotting import output_file
+
+from . import timeline  # type: ignore
 
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
