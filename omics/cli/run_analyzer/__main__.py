@@ -469,7 +469,7 @@ if __name__ == "__main__":
                 try:
                     headroom = float(opts["--headroom"])
                 except Exception:
-                    die(f"the --headroom argument {opts["--headroom"]} is not a valid float value")
+                    die(f'the --headroom argument {opts["--headroom"]} is not a valid float value')
                 if headroom > 1.0 or headroom < 0.0:
                     die(f"the --headroom argument {headroom} must be between 0.0 and 1.0")
 
