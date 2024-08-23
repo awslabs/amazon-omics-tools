@@ -388,6 +388,11 @@ For rows that are a _task_ type, the maximums, averages and reserved columns ref
 > [!WARNING]  
 > At this time AWS HealthOmics does not report the average or maximum storage used by runs that use "DYNAMIC" storage that run for under two hours. Because of this limitation the `storageMaximumGiB` and `storageAverageGiB` are set to zero and will not be included in the estimate run cost.
 
+#### Run Optimization and Estimated Cost Reduction
+
+Based on the metrics observed and calculated for a run, the application will recommend the smallest instance type that could be used for each task in the run. The type is reported in the `omicsInstanceTypeMinimum` column. To obtain this type for a task you can set the task CPU and memory requested for the task to the values of `recommendedCpus` and  `recommendedMemoryGiB` in you workflow definition. Based on this change each task would be estimated to
+reduce the cost of the run by `estimatedUSD` minus `minimumUSD`. The total potential cost reduction for the entire run can be estimated by subtracting the `minimumUSD` value from the `estimatedUSD` value in the row where the `type` is "`run`".
+
 #### Add headroom to recommendations
 
 Sometimes you will see variance in the amount of memory and CPU used in a run task, especially if you expect to run workflows with larger input files than were used in the analyzed run. For this reason you might want to allow add some headroom to the recommendations produced by the the run analyzer.
