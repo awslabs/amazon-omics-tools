@@ -54,9 +54,9 @@ def _get_task_timings_data(tasks, time_units="min"):
         task["running_right"] = (task["stopTime"] - tare).total_seconds() * time_scale_factor
         task["running_duration"] = task["running_right"] - task["running_left"]
 
-        task["queued_left"] = (task["creationTime"] - tare).total_seconds() * time_scale_factor
-        task["queued_right"] = task["running_left"]
-        task["queued_duration"] = task["queued_right"] - task["queued_left"]
+        task["starting_left"] = (task["creationTime"] - tare).total_seconds() * time_scale_factor
+        task["starting_right"] = task["running_left"]
+        task["starting_duration"] = task["starting_right"] - task["starting_left"]
 
         task["label"] = f"({task['arn']}) {task['name']}"
         task["text_x"] = (task["stopTime"] - tare).total_seconds() + 30 * time_scale_factor
@@ -81,21 +81,21 @@ def plot_timeline(tasks, title="", time_units="min", max_duration_hrs=5, show_pl
         ("gpus", "@gpus"),
         ("memory", "@memory GiB"),
         ("instanceType", "@instanceType"),
-        ("queued", f"@queued_duration {time_units}"),
+        ("starting", f"@starting_duration {time_units}"),
         ("duration", f"@running_duration {time_units}"),
         ("status", "@status"),
-        ("est. cost USD", "@estimatedUSD"),
+        ("est. cost USD", "@estimatedUSD{0.00000}"),
     ]
 
     p_run = figure(width=960, height=800, sizing_mode="stretch_both", tooltips=tooltips)
     p_run.hbar(
         y="y",
-        left="queued_left",
-        right="queued_right",
+        left="starting_left",
+        right="starting_right",
         height=0.8,
         color="lightgrey",
         source=source,
-        legend_label="queued",
+        legend_label="starting",
     )
     p_run.hbar(
         y="y",
