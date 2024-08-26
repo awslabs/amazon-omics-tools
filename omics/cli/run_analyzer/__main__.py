@@ -359,9 +359,10 @@ def add_metrics(res, resources, pricing):
             metrics["minimumUSD"] = price
 
     elif "instanceType" in res:
+        runningForInstanceCost = max(60, running)
         itype = res["instanceType"]
         metrics["omicsInstanceTypeReserved"] = itype
-        price = get_pricing(pricing, itype, region, running / SECS_PER_HOUR)
+        price = get_pricing(pricing, itype, region, runningForInstanceCost / SECS_PER_HOUR)
         if price:
             metrics["estimatedUSD"] = price
         if cpus_max and mem_max and not gpus_res:
@@ -373,7 +374,7 @@ def add_metrics(res, resources, pricing):
             metrics["omicsInstanceTypeMinimum"] = itype
             metrics["recommendedCpus"] = cpus_res
             metrics["recommendedMemoryGiB"] = mem_res
-        price = get_pricing(pricing, itype, region, running / SECS_PER_HOUR)
+        price = get_pricing(pricing, itype, region, runningForInstanceCost / SECS_PER_HOUR)
         if price:
             metrics["minimumUSD"] = price
 

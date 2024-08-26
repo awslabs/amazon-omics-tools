@@ -84,7 +84,7 @@ def plot_timeline(tasks, title="", time_units="min", max_duration_hrs=5, show_pl
         ("starting", f"@starting_duration {time_units}"),
         ("duration", f"@running_duration {time_units}"),
         ("status", "@status"),
-        ("est. cost USD", "@estimatedUSD"),
+        ("est. cost USD", "@estimatedUSD{0.00000}"),
     ]
 
     p_run = figure(width=960, height=800, sizing_mode="stretch_both", tooltips=tooltips)
