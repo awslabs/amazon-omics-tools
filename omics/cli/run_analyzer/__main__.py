@@ -11,6 +11,7 @@ Usage: omics-run-analyzer [<runId>...]
                           [--file=<path>]
                           [--out=<path>]
                           [--plot=<directory>]
+                          [--headroom=<float>]
                           [--help]
 
 Options:
@@ -22,6 +23,7 @@ Options:
  -f, --file=<path>        Load input from file
  -o, --out=<path>         Write output to file
  -P, --plot=<directory>   Plot a run timeline to a directory
+ -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
  -h, --help               Show help text
 
 Examples:
@@ -34,10 +36,15 @@ Examples:
  omics-run-analyzer 2345678:12345678-1234-5678-9012-123456789012
  # Output workflow run and tasks in JSON format
  omics-run-analyzer 1234567 -s -o run-1234567.json
+ # Plot a timeline of a workflow run and write the plot the HTML to "out/"
+ omics-run-analyzer 1234567 -P out
+ # Putput a workflow run analysis with 10% headroom added to recommended CPU and memory
+ omics-run-analyzer 1234567 -P timeline -H 0.1
 """
 import csv
 import datetime
 import json
+import math
 import os
 import re
 import sys
@@ -293,12 +300,14 @@ def add_run_util(run, tasks):
             metrics[name] /= time
 
 
-def add_metrics(res, resources, pricing):
+def add_metrics(res, resources, pricing, headroom):
     """Add run/task metrics"""
     arn = re.split(r"[:/]", res["arn"])
     rtype = arn[-2]
     region = arn[3]
     res["type"] = rtype
+
+    headroom_multiplier = 1 + headroom
 
     metrics = res.get("metrics", {})
     # if a resource has no metrics body then we can skip the rest
@@ -330,7 +339,7 @@ def add_metrics(res, resources, pricing):
     if store_res and store_max:
         metrics["storageUtilizationRatio"] = float(store_max) / float(store_res)
 
-    storage_type = res.get("storageType")
+    storage_type = res.get("storageType", STORAGE_TYPE_STATIC_RUN_STORAGE)
 
     if rtype == "run":
         # Get capacity requested (static), capacity max. used (dynamic) and
@@ -352,7 +361,7 @@ def add_metrics(res, resources, pricing):
 
         # Get price for optimal static storage
         if store_max:
-            capacity = get_static_storage_gib(store_max)
+            capacity = get_static_storage_gib(store_max * headroom_multiplier)
         gib_hrs = capacity * running / SECS_PER_HOUR
         price = get_pricing(pricing, PRICE_RESOURCE_TYPE_STATIC_RUN_STORAGE, region, gib_hrs)
         if price:
@@ -366,6 +375,9 @@ def add_metrics(res, resources, pricing):
         if price:
             metrics["estimatedUSD"] = price
         if cpus_max and mem_max and not gpus_res:
+            # Get smallest instance type that meets the requirements
+            cpus_max = math.ceil(cpus_max * headroom_multiplier)
+            mem_max = math.ceil(mem_max * headroom_multiplier)
             (itype, cpus, mem) = get_instance(cpus_max, mem_max)
             metrics["omicsInstanceTypeMinimum"] = itype
             metrics["recommendedCpus"] = cpus
@@ -453,6 +465,15 @@ if __name__ == "__main__":
                 row = [event.get(h, "") for h in hdrs]
                 writer.writerow(row)
         else:
+            headroom = 0.0
+            if opts["--headroom"]:
+                try:
+                    headroom = float(opts["--headroom"])
+                except Exception:
+                    die(f'the --headroom argument {opts["--headroom"]} is not a valid float value')
+                if headroom > 1.0 or headroom < 0.0:
+                    die(f"the --headroom argument {headroom} must be between 0.0 and 1.0")
+
             # Show run statistics
             def tocsv(val):
                 if val is None:
@@ -502,7 +523,7 @@ if __name__ == "__main__":
             writer = csv.writer(out, lineterminator="\n")
             writer.writerow(formatted_headers)
             for res in resources:
-                add_metrics(res, resources, pricing)
+                add_metrics(res, resources, pricing, headroom)
                 metrics = res.get("metrics", {})
                 row = [tocsv(metrics.get(h, res.get(h))) for h in hdrs]
                 writer.writerow(row)

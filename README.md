@@ -364,7 +364,9 @@ The CSV output by the command above includes the following columns:
 * __gpusRequested__ : The number of GPUs requested by the workflow task
 * __memoryRequestedGiB__ : Gibibytes of memory requested by the workflow task
 * __omicsInstanceTypeReserved__ : Requested HealthOmics instance type for each task
-* __omicsInstanceTypeMinimum__ : Minimum HealthOmics instance type that could run each task. 
+* __omicsInstanceTypeMinimum__ : Minimum HealthOmics instance type that could run each task.
+* __recommendedCpus__: The number of CPUs recommended for this task (corresponding to the number of CPUs in the omicsInstanceTypeMinimum)
+* __recommendedMemoryGiB__: The amount of GiB of memory recommended for this task (corresponding to the number of CPUs in the omicsInstanceTypeMinimum)
 * __estimatedUSD__ : Estimated HealthOmics charges (USD) for the workflow based on _sizeReserved_ and _runningSeconds_
 * __minimumUSD__ : Estimated HealthOmics charges (USD) for the workflow based on the recommended _omicsInstanceTypeMinimum_ and _runningSeconds_
 * __cpuUtilizationRatio__ : CPU utilization (_cpusMaximum_ / _cpusReserved_) for workflow task(s)
@@ -381,8 +383,24 @@ The CSV output by the command above includes the following columns:
 * __storageMaximumGiB__ : Maximum gibibytes of storage used during a single 1-minute interval
 * __storageAverageGiB__ : Average gibibytes of storage used by the workflow run
 
+For rows that are a _task_ type, the maximums, averages and reserved columns refer to the maximum, average or reserved amounts of the respective resource used by that task. These values can be used to guide the resources that should be requested for that task. For rows that are a _run_ type the maximums, averages and reserved columns refer to the maximum, average or reserved amounts of the respective resource used __concurrently__ by that run. These values can be used to determine if the accounts HealthOmics active CPUs/memory limits are being reached which might indicate the run is constrained by these limits.
+
 > [!WARNING]  
 > At this time AWS HealthOmics does not report the average or maximum storage used by runs that use "DYNAMIC" storage that run for under two hours. Because of this limitation the `storageMaximumGiB` and `storageAverageGiB` are set to zero and will not be included in the estimate run cost.
+
+#### Run Optimization and Estimated Cost Reduction
+
+Based on the metrics observed and calculated for a run, the application will recommend the smallest instance type that could be used for each task in the run. The type is reported in the `omicsInstanceTypeMinimum` column. To obtain this type for a task you can set the task CPU and memory requested for the task to the values of `recommendedCpus` and  `recommendedMemoryGiB` in you workflow definition. Based on this change each task would be estimated to
+reduce the cost of the run by `estimatedUSD` minus `minimumUSD`. The total potential cost reduction for the entire run can be estimated by subtracting the `minimumUSD` value from the `estimatedUSD` value in the row where the `type` is "`run`".
+
+#### Add headroom to recommendations
+
+Sometimes you will see variance in the amount of memory and CPU used in a run task, especially if you expect to run workflows with larger input files than were used in the analyzed run. For this reason you might want to allow add some headroom to the recommendations produced by the the run analyzer.
+
+The `-H` or `--headroom` flag can be use to add an additional `0.0` to `1.0` times the max CPU or memory used by a task to the calculation used to determine
+the `omicsInstanceTypeMinimum` recommendation. For example if a task used a max of 3.6 GiB of memory and the headroom value is 0.5 then 6 GiB of memory - `math.ceil(3.6 * (1 + 0.5))` - will be used to determine the minimum instance type that should be used.
+
+If your analyzed run is already close to optimal then adding headroom might result in the recommended minimum instance being larger than the instance used in the run which will also cause the "`minimumUSD`" to be larger than the "`estimatedUSD`".
 
 #### Produce a timeline plot for a run
 
