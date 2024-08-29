@@ -426,7 +426,14 @@ def create_config(engine, task_resources, filename):
                 out.write(task_string)
             
     elif engine == 'CWL':
-        pass
+        with open(filename, "w") as out:
+            for task in task_resources:
+                task_string = textwrap.dedent(f"""
+                {task}:
+                    coresMin: {task_resources[task]['cpus']}
+                    ramMin: {task_resources[task]['mem']}
+                """)
+                out.write(task_string)
     elif engine == 'WDL':
         pass
     else:
@@ -560,6 +567,11 @@ if __name__ == "__main__":
                         config[task_name] ={
                             'cpus': metrics['recommendedCpus'],
                             'mem': metrics['recommendedMemoryGiB']
+                        }
+                    else:
+                        config[task_name] ={
+                            'cpus': max(metrics['recommendedCpus'], config[task_name]['cpus']),
+                            'mem': max(metrics['recommendedMemoryGiB'], config[task_name]['mem'])
                         }
                 row = [tocsv(metrics.get(h, res.get(h))) for h in hdrs]
                 writer.writerow(row)
