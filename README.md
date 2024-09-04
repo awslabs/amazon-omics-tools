@@ -32,11 +32,17 @@ AWS HealthOmics Tools is available through pypi. To install, type:
 pip install amazon-omics-tools
 ```
 
-To install from source:
+### Install from source
+
+Installing from source requires that your machine has the following prerequisites installed: 
+- `python3.10` or above
+- `poetry` package manager
+- `make` build tool
 
 ```
 git clone https://github.com/awslabs/amazon-omics-tools.git
-pip install ./amazon-omics-tools
+cd ./amazon-omics-tools
+make install
 ```
 
 ## SDK Tools
