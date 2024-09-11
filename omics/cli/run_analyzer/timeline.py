@@ -109,9 +109,6 @@ def plot_timeline(tasks, title="", time_units="min", max_duration_hrs=5, show_pl
         legend_label="running",
     )
     if len(data) < 101:
-        print(f"data[text_x] is {data["text_x"]}", file=sys.stderr)
-        print(f"data[y] is {data['y']}", file=sys.stderr)
-        print(f"data[name] is {data['name']}", file=sys.stderr)
         p_run.text(
             # task name label
             color="black",
