@@ -89,6 +89,7 @@ def plot_timeline(tasks, title="", time_units="min", max_duration_hrs=5, show_pl
 
     p_run = figure(width=960, height=800, sizing_mode="stretch_both", tooltips=tooltips)
     p_run.hbar(
+        # start time bar
         y="y",
         left="starting_left",
         right="starting_right",
@@ -98,6 +99,7 @@ def plot_timeline(tasks, title="", time_units="min", max_duration_hrs=5, show_pl
         legend_label="starting",
     )
     p_run.hbar(
+        # running time bar
         y="y",
         left="running_left",
         right="running_right",
@@ -106,9 +108,15 @@ def plot_timeline(tasks, title="", time_units="min", max_duration_hrs=5, show_pl
         source=source,
         legend_label="running",
     )
-    if len(data) < 50:
+    if len(data) < 101:
+        print(f"data[text_x] is {data["text_x"]}", file=sys.stderr)
+        print(f"data[y] is {data['y']}", file=sys.stderr)
+        print(f"data[name] is {data['name']}", file=sys.stderr)
         p_run.text(
-            x="text_x",
+            # task name label
+            color="black",
+            x="running_right",
+            x_offset=10,
             y="y",
             text="name",
             alpha=0.4,
