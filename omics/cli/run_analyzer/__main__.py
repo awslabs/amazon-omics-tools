@@ -435,7 +435,14 @@ def create_config(engine, task_resources, filename):
                 """)
                 out.write(task_string)
     elif engine == 'WDL':
-        pass
+        with open(filename, "w") as out:
+            for task in task_resources:
+                task_string = textwrap.dedent(f"""
+                {task}:
+                    cpu: "{task_resources[task]['cpus']}"
+                    memory: "{task_resources[task]['mem']}"
+                """)
+                out.write(task_string)
     else:
         raise ValueError("Unknown workflow engine")
     
