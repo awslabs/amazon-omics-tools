@@ -19,15 +19,17 @@ Arguments:
  <runId>...               One or more workflow run IDs
 
 Options:
+ -b, --batch=<runId>...   Analyze one or more runs and generate aggregate stastics on repeated or scattered tasks
+ -f, --file=<path>        Load input from file
+ -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
+ -o, --out=<path>         Write output to file
  -p, --profile=<profile>  AWS profile
+ -P, --plot=<directory>   Plot a run timeline to a directory
  -r, --region=<region>    AWS region
  -t, --time=<interval>    Select runs over a time interval [default: 1day]
  -s, --show               Show run resources with no post-processing (JSON)
  -T, --timeline           Show workflow run timeline
- -f, --file=<path>        Load input from file
- -o, --out=<path>         Write output to file
- -P, --plot=<directory>   Plot a run timeline to a directory
- -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
+
  -h, --help               Show help text
  --version                Show the version of this application
 
@@ -35,8 +37,10 @@ Examples:
  # Show workflow runs that were running in the last 5 days
  # (supported time units include minutes, hours, days, weeks, or years)
  omics-run-analyzer --time=5days
- # Retrieve and analyze a specific workflow run by ID
+ # Retrieve and analyze a specific workflow run by ID writing output to ./run-1234567.csv
  omics-run-analyzer 1234567 -o run-1234567.csv
+ # Show the completion time and UUID (only) of multiple runs
+ omics-run-analyzer 1234567 2345678
  # Retrieve and analyze a specific workflow run by ID and UUID
  omics-run-analyzer 2345678:12345678-1234-5678-9012-123456789012
  # Output workflow run and tasks in JSON format
@@ -64,7 +68,6 @@ from bokeh.plotting import output_file
 
 from . import timeline  # type: ignore
 
-__version__ = importlib.metadata.version("amazon-omics-tools")
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
 OMICS_SERVICE_CODE = "AmazonOmics"
@@ -421,7 +424,7 @@ def get_timeline_event(res, resources):
 
 if __name__ == "__main__":
     # Parse command-line options
-    opts = docopt.docopt(__doc__)
+    opts = docopt.docopt(__doc__, version=f"v{importlib.metadata.version("amazon-omics-tools")}")
 
     try:
         session = boto3.Session(profile_name=opts["--profile"], region_name=opts["--region"])
@@ -436,10 +439,6 @@ if __name__ == "__main__":
     if opts["--file"]:
         with open(opts["--file"]) as f:
             resources = json.load(f)
-
-    if opts["--version"]:
-        print(f"omics.cli.run_analyzer: v{__version__}")
-        exit(0)
     else:
         try:
             logs = session.client("logs")
