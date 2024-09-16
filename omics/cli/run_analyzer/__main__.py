@@ -12,7 +12,11 @@ Usage: omics-run-analyzer [<runId>...]
                           [--out=<path>]
                           [--plot=<directory>]
                           [--headroom=<float>]
-                          [--help]
+       omics-run-analyzer (-h --help)
+       omics-run-analyzer --version
+
+Arguments:
+ <runId>...               One or more workflow run IDs
 
 Options:
  -p, --profile=<profile>  AWS profile
@@ -25,6 +29,7 @@ Options:
  -P, --plot=<directory>   Plot a run timeline to a directory
  -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
  -h, --help               Show help text
+ --version                Show the version of this application
 
 Examples:
  # Show workflow runs that were running in the last 5 days
@@ -53,10 +58,13 @@ import boto3
 import dateutil
 import dateutil.utils
 import docopt
+import importlib.metadata
+
 from bokeh.plotting import output_file
 
 from . import timeline  # type: ignore
 
+__version__ = importlib.metadata.version("amazon-omics-tools")
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
 OMICS_SERVICE_CODE = "AmazonOmics"
@@ -428,6 +436,10 @@ if __name__ == "__main__":
     if opts["--file"]:
         with open(opts["--file"]) as f:
             resources = json.load(f)
+
+    if opts["--version"]:
+        print(f"omics.cli.run_analyzer: v{__version__}")
+        exit(0)
     else:
         try:
             logs = session.client("logs")
