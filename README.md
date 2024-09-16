@@ -399,6 +399,9 @@ For rows that are a _task_ type, the maximums, averages and reserved columns ref
 Based on the metrics observed and calculated for a run, the application will recommend the smallest instance type that could be used for each task in the run. The type is reported in the `omicsInstanceTypeMinimum` column. To obtain this type for a task you can set the task CPU and memory requested for the task to the values of `recommendedCpus` and  `recommendedMemoryGiB` in you workflow definition. Based on this change each task would be estimated to
 reduce the cost of the run by `estimatedUSD` minus `minimumUSD`. The total potential cost reduction for the entire run can be estimated by subtracting the `minimumUSD` value from the `estimatedUSD` value in the row where the `type` is "`run`".
 
+> [!WARNING]
+> Cost estimates are based on the AWS list price at the time the run analysis is performed. In the event prices have changed these may not reflect the price you were charged at the time of the run. Further, the run analyzer does not account for any discounts, credits or price agreements you may have. Price estimates for recommended instance sizes (`minimumUSD`) assume that the runtime of the task will remain the same on the recommended instance. Actual costs will be determined based on the actual runtime.
+
 #### Add headroom to recommendations
 
 Sometimes you will see variance in the amount of memory and CPU used in a run task, especially if you expect to run workflows with larger input files than were used in the analyzed run. For this reason you might want to allow add some headroom to the recommendations produced by the the run analyzer.
