@@ -12,6 +12,8 @@ Usage: omics-run-analyzer [<runId>...]
                           [--out=<path>]
                           [--plot=<directory>]
                           [--headroom=<float>]
+       omics-run-analyzer --batch <runId>... [--profile=<profile>] [--region=<region>] [--headroom=<float>]
+                                             [--show] --[out=<path>]                  
        omics-run-analyzer (-h --help)
        omics-run-analyzer --version
 
@@ -19,7 +21,7 @@ Arguments:
  <runId>...               One or more workflow run IDs
 
 Options:
- -b, --batch=<runId>...   Analyze one or more runs and generate aggregate stastics on repeated or scattered tasks
+ -b, --batch   Analyze one or more runs and generate aggregate stastics on repeated or scattered tasks
  -f, --file=<path>        Load input from file
  -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
  -o, --out=<path>         Write output to file
@@ -47,8 +49,12 @@ Examples:
  omics-run-analyzer 1234567 -s -o run-1234567.json
  # Plot a timeline of a workflow run and write the plot the HTML to "out/"
  omics-run-analyzer 1234567 -P out
- # Putput a workflow run analysis with 10% headroom added to recommended CPU and memory
+ # Output a workflow run analysis with 10% headroom added to recommended CPU and memory
  omics-run-analyzer 1234567 -P timeline -H 0.1
+ # Analyze multiple runs and output aggregate statistics to stdout as JSON
+ omics-run-analyzer -b 1234567 2345678 3456789 --show
+ # Analyze multiple runs and output aggregate statistics to a file
+ omics-run-analyzer -b 1234567 2345678 3456789 -o out.csv
 """
 import csv
 import datetime
@@ -425,6 +431,8 @@ def get_timeline_event(res, resources):
 if __name__ == "__main__":
     # Parse command-line options
     opts = docopt.docopt(__doc__, version=f"v{importlib.metadata.version("amazon-omics-tools")}")
+    print(opts, file=sys.stderr)
+    exit(0)
 
     try:
         session = boto3.Session(profile_name=opts["--profile"], region_name=opts["--region"])
