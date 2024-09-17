@@ -13,7 +13,7 @@ Usage: omics-run-analyzer [<runId>...]
                           [--plot=<directory>]
                           [--headroom=<float>]
        omics-run-analyzer --batch <runId>... [--profile=<profile>] [--region=<region>] [--headroom=<float>]
-                                             [--show] --[out=<path>]                  
+                                             [--out=<path>]                  
        omics-run-analyzer (-h --help)
        omics-run-analyzer --version
 
@@ -73,6 +73,7 @@ import importlib.metadata
 from bokeh.plotting import output_file
 
 from . import timeline  # type: ignore
+from . import batch     # type: ignore
 
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
@@ -215,7 +216,11 @@ def get_runs(logs, runs, opts):
                 "logGroupName": OMICS_LOG_GROUP,
                 "logStreamNamePrefix": prefix,
             }
-            streams.extend(get_streams(logs, rqst))
+            returned_streams = get_streams(logs, rqst)
+            if returned_streams and len(returned_streams) > 0:
+                streams.extend(get_streams(logs, rqst))
+            else:
+                die(f"run {run[-1]} not found")
     else:
         # Get runs in time range
         start_time = datetime.datetime.now() - parse_time_delta(opts["--time"])
@@ -460,6 +465,12 @@ if __name__ == "__main__":
             resources = get_run_resources(logs, runs[0])
             if not resources:
                 die("no workflow run resources")
+        if len(runs) >=1 and opts["--batch"]:
+            list_of_resources = []
+            for run in runs:
+                resources = get_run_resources(logs, run)
+                if resources:
+                    list_of_resources.append(resources)
 
     # Display output
     with open(opts["--out"] or sys.stdout.fileno(), "w") as out:
@@ -492,6 +503,8 @@ if __name__ == "__main__":
                     die(f'the --headroom argument {opts["--headroom"]} is not a valid float value')
                 if headroom > 1.0 or headroom < 0.0:
                     die(f"the --headroom argument {headroom} must be between 0.0 and 1.0")
+            if opts["--batch"]:
+                batch.aggregate_and_print(list_of_resources, pricing, opts)
 
             # Show run statistics
             def tocsv(val):
