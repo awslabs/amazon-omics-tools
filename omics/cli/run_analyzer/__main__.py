@@ -445,7 +445,20 @@ def create_config(engine, task_resources, filename):
                 out.write(task_string)
     else:
         raise ValueError("Unknown workflow engine")
-    
+
+def get_base_task(engine, task):
+    # Returns the base task name
+    if engine == 'NEXTFLOW':
+        individual_task = task.split(" ")[0]
+        return individual_task
+    elif engine == 'CWL':
+        individual_task = task.split(" ")[0]
+        return individual_task
+    elif engine == 'WDL':
+        individual_task = task.split(" ")[0]
+        return individual_task
+    else:
+        raise ValueError("Unknown workflow engine")
 
 
 if __name__ == "__main__":
@@ -569,7 +582,7 @@ if __name__ == "__main__":
                     wfid = res['workflow'].split('/')[-1]
                     engine = omics.get_workflow(id=wfid)['engine']
                 if res['type'] == 'task':
-                    task_name = res['name'].split(" ")[0]
+                    task_name = get_base_task(engine, res['name'])
                     if task_name not in config.keys():
                         config[task_name] ={
                             'cpus': metrics['recommendedCpus'],
