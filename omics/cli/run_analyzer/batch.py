@@ -23,6 +23,10 @@ hdrs = [
             "stdDevStorageMaximumGiB"
         ]
 
+wdl_task_regex = r"^([^-]+)(-\d+-\d+.*)?$"
+nextflow_task_regex = r"^(.+)(\s\(.+\))$"
+cwl_task_regex = r"^(^\D+)(_\d+)?$"
+
 def aggregate_and_print(resources_list, pricing, headroom=0.0, out=sys.stdout):
     """Aggregate resources and print to output"""
     for resources in resources_list:        
@@ -31,8 +35,8 @@ def aggregate_and_print(resources_list, pricing, headroom=0.0, out=sys.stdout):
         for res in resources:
             main.add_metrics(res, resources, pricing, headroom)
 
-        # if there are scattter resources from the run with a common name prefix then aggregate
-        names = [r["name"] for r in resources]
-        names = list(set(names))
-        for name in names:
-            _aggregate_resources(resources, name)
+    # if there are resources from the runs with a common name or prefix then aggregate
+    names = [r["name"] for r in resources]
+    names = list(set(names))
+    for name in names:
+        _aggregate_resources(resources, name)
