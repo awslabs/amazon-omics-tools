@@ -220,7 +220,7 @@ def get_run_resources(logs, run):
         "logGroupName": OMICS_LOG_GROUP,
         "logStreamName": run["logStreamName"],
         "startFromHead": True,
-        "endTime":  run["lastEventTimestamp"] + 1,
+        "endTime": run["lastEventTimestamp"] + 1,
     }
     resources = []
     done = False
