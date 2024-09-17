@@ -220,15 +220,13 @@ def get_run_resources(logs, run):
         "logGroupName": OMICS_LOG_GROUP,
         "logStreamName": run["logStreamName"],
         "startFromHead": True,
+        "endTime":  run["lastEventTimestamp"] + 1,
     }
     resources = []
     done = False
     while not done:
-        resp = logs.get_log_events(**rqst, limit=1024)
-        events = resp.get("events", [])
-        if not events:
-            done = True
-        for evt in resp.get("events"):
+        resp = logs.get_log_events(**rqst)
+        for evt in resp.get("events", []):
             resources.append(json.loads(evt["message"]))
         token = resp.get("nextForwardToken")
         if not token or token == rqst.get("nextToken"):
