@@ -167,6 +167,7 @@ def stream_to_run(strm):
 def get_streams(logs, rqst, start_time=None):
     """Get matching CloudWatch Log streams"""
     streams = []
+    # using boto3 get the log stream descriptions for the request, paginating the responses
     for page in logs.get_paginator("describe_log_streams").paginate(**rqst):
         done = False
         for strm in page["logStreams"]:
@@ -219,18 +220,14 @@ def get_run_resources(logs, run):
         "logGroupName": OMICS_LOG_GROUP,
         "logStreamName": run["logStreamName"],
         "startFromHead": True,
+        "endTime": run["lastEventTimestamp"] + 1,
     }
     resources = []
     done = False
     while not done:
         resp = logs.get_log_events(**rqst)
         for evt in resp.get("events", []):
-            try:
-                resources.append(json.loads(evt["message"]))
-            except Exception:
-                pass
-            if evt["timestamp"] >= run["lastEventTimestamp"]:
-                done = True
+            resources.append(json.loads(evt["message"]))
         token = resp.get("nextForwardToken")
         if not token or token == rqst.get("nextToken"):
             done = True
