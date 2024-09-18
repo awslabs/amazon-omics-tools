@@ -25,7 +25,7 @@ Options:
  -o, --out=<path>         Write output to file
  -P, --plot=<directory>   Plot a run timeline to a directory
  -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
- -c, --config=<path>      Output a config file with recommended resources
+ -c, --config=<path>      Output a config file with recommended resources (Nextflow only)
  -h, --help               Show help text
 
 Examples:
@@ -426,23 +426,9 @@ def create_config(engine, task_resources, filename):
                 out.write(task_string)
             
     elif engine == 'CWL':
-        with open(filename, "w") as out:
-            for task in task_resources:
-                task_string = textwrap.dedent(f"""
-                {task}:
-                    coresMin: {task_resources[task]['cpus']}
-                    ramMin: {task_resources[task]['mem']}
-                """)
-                out.write(task_string)
+        raise ValueError("--config does not currently support CWL workflows")
     elif engine == 'WDL':
-        with open(filename, "w") as out:
-            for task in task_resources:
-                task_string = textwrap.dedent(f"""
-                {task}:
-                    cpu: "{task_resources[task]['cpus']}"
-                    memory: "{task_resources[task]['mem']}"
-                """)
-                out.write(task_string)
+        raise ValueError("--config does not currently support WDL workflows")
     else:
         raise ValueError("Unknown workflow engine")
 
@@ -452,11 +438,9 @@ def get_base_task(engine, task):
         individual_task = task.split(" ")[0]
         return individual_task
     elif engine == 'CWL':
-        individual_task = task.split(" ")[0]
-        return individual_task
+        return task
     elif engine == 'WDL':
-        individual_task = task.split(" ")[0]
-        return individual_task
+        return task
     else:
         raise ValueError("Unknown workflow engine")
 
