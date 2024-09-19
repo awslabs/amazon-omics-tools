@@ -1,38 +1,41 @@
 import re
 
-ENGINES = ['WDL', 'CWL', 'Nextflow']
+ENGINES = ["WDL", "CWL", "Nextflow"]
 
 _wdl_task_regex = r"^([^-]+)(-\d+-\d+.*)?$"
 _nextflow_task_regex = r"^(.+)(\s\(.+\))$"
 _cwl_task_regex = r"^(^\D+)(_\d+)?$"
 
+
 def get_engine(workflow_arn, session) -> str:
-        omics = session.client("omics")
-        id = workflow_arn.split('/')[-1]
-        return omics.get_workflow(id)['engine']
+    omics = session.client("omics")
+    id = workflow_arn.split("/")[-1]
+    return omics.get_workflow(id)["engine"]
+
 
 def task_base_name(name: str, engine: str) -> str:
-        # WDL
-        if engine == 'WDL':
-            m = re.match(_wdl_task_regex, name)
-            if m:
-                return m.group(1)
-        # Nextflow
-        elif engine == 'Nextflow':
-            m = re.match(_nextflow_task_regex, name)
-            if m:
-                return m.group(1)
-        # CWL
-        elif engine == 'CWL':
-            m = re.match(_cwl_task_regex, name)
-            if m:
-                return m.group(1)
-        else:
-            raise ValueError(f"Unsupported engine: {engine}")
-        return name
+    # WDL
+    if engine == "WDL":
+        m = re.match(_wdl_task_regex, name)
+        if m:
+            return m.group(1)
+    # Nextflow
+    elif engine == "Nextflow":
+        m = re.match(_nextflow_task_regex, name)
+        if m:
+            return m.group(1)
+    # CWL
+    elif engine == "CWL":
+        m = re.match(_cwl_task_regex, name)
+        if m:
+            return m.group(1)
+    else:
+        raise ValueError(f"Unsupported engine: {engine}")
+    return name
+
 
 def omics_instance_weight(instance: str) -> int:
-    
+
     sizes = {
         "": 2,
         "x": 4,

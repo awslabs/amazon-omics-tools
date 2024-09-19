@@ -58,6 +58,7 @@ Examples:
 """
 import csv
 import datetime
+import importlib.metadata
 import json
 import math
 import os
@@ -68,12 +69,10 @@ import boto3
 import dateutil
 import dateutil.utils
 import docopt
-import importlib.metadata
-
 from bokeh.plotting import output_file
 
+from . import batch  # type: ignore
 from . import timeline  # type: ignore
-from . import batch     # type: ignore
 
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
@@ -465,7 +464,7 @@ if __name__ == "__main__":
             resources = get_run_resources(logs, runs[0])
             if not resources:
                 die("no workflow run resources")
-        if len(runs) >=1 and opts["--batch"]:
+        if len(runs) >= 1 and opts["--batch"]:
             list_of_resources = []
             for run in runs:
                 resources = get_run_resources(logs, run)

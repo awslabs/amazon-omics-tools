@@ -1,32 +1,35 @@
-import sys
 import statistics
+import sys
 
 from . import __main__ as main
 from . import utils
 
 hdrs = [
-            "type",
-            "name",
-            "count",
-            "meanRunningSeconds",
-            "maximumRunningSeconds",
-            "stdDevRunningSeconds",
-            "maximumCpuUtilization",
-            "maximumMemoryUtilization",
-            "maximumGpusReserved",
-            "recommendedCpus",
-            "recommendedMemoryGiB",
-            "recommendOmicsInstanceType",
-            "maximumEstimatedUSD",
-            "meanEstimatedUSD"
-        ]
+    "type",
+    "name",
+    "count",
+    "meanRunningSeconds",
+    "maximumRunningSeconds",
+    "stdDevRunningSeconds",
+    "maximumCpuUtilization",
+    "maximumMemoryUtilization",
+    "maximumGpusReserved",
+    "recommendedCpus",
+    "recommendedMemoryGiB",
+    "recommendOmicsInstanceType",
+    "maximumEstimatedUSD",
+    "meanEstimatedUSD",
+]
+
 
 def aggregate_and_print(resources_list, pricing, engine, headroom=0.0, out=sys.stdout):
     """Aggregate resources and print to output"""
     if engine not in utils.ENGINES:
-        raise ValueError(f"Invalid engine for use in batch aggregation: {engine}. Must be one of {utils.ENGINES}")
+        raise ValueError(
+            f"Invalid engine for use in batch aggregation: {engine}. Must be one of {utils.ENGINES}"
+        )
 
-    for resources in resources_list:        
+    for resources in resources_list:
         # filter resources to remove anything where res["type"] is not "run"
         resources = [r for r in resources if r["type"] == "run"]
         for res in resources:
@@ -42,6 +45,7 @@ def aggregate_and_print(resources_list, pricing, engine, headroom=0.0, out=sys.s
 
     for name in names:
         _aggregate_resources(resources, name, out)
+
 
 def _aggregate_resources(resources, name, out):
     """Aggregate resources with the same name"""
@@ -72,6 +76,7 @@ def _aggregate_resources(resources, name, out):
 
         print(",".join([str(res.get(h, "")) for h in hdrs]), file=out)
 
+
 def _do_aggregation(resources, resource_key, operation):
     if operation == "count":
         return len(resources)
@@ -88,4 +93,3 @@ def _do_aggregation(resources, resource_key, operation):
         return round(statistics.stdev([r[resource_key] for r in resources]), 2)
     else:
         raise ValueError(f"Invalid aggregation operation: {operation}")
-    
