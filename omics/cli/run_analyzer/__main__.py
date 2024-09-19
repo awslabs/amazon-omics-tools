@@ -13,7 +13,7 @@ Usage: omics-run-analyzer [<runId>...]
                           [--plot=<directory>]
                           [--headroom=<float>]
        omics-run-analyzer --batch <runId>... [--profile=<profile>] [--region=<region>] [--headroom=<float>]
-                                             [--out=<path>]                  
+                                             [--out=<path>]
        omics-run-analyzer (-h --help)
        omics-run-analyzer --version
 

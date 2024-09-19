@@ -8,12 +8,14 @@ _cwl_task_regex = r"^(^\D+)(_\d+)?$"
 
 
 def get_engine(workflow_arn, session) -> str:
+    """Get the engine name for the workflow_arn"""
     omics = session.client("omics")
     id = workflow_arn.split("/")[-1]
     return omics.get_workflow(id)["engine"]
 
 
 def task_base_name(name: str, engine: str) -> str:
+    """Find the base name of the task assuming the naming conventions used by the engine"""
     # WDL
     if engine == "WDL":
         m = re.match(_wdl_task_regex, name)
@@ -35,7 +37,7 @@ def task_base_name(name: str, engine: str) -> str:
 
 
 def omics_instance_weight(instance: str) -> int:
-
+    """Compute a numeric weight for an instance to be used in sorting or finding a max or min"""
     sizes = {
         "": 2,
         "x": 4,
@@ -46,7 +48,7 @@ def omics_instance_weight(instance: str) -> int:
         "16x": 64,
         "24x": 96,
     }
-    families = {"c": 2, "m": 4, "r": 8, "g4dn": 16, "g5": 32}
+    families = {"c": 2, "m": 4, "r": 8, "g4dn": 16, "g5": 16}
     # remove the "omics." from the string
     instance.replace("omics.", "")
     # split the instance into family and size
