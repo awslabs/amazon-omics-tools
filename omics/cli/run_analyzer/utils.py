@@ -1,6 +1,6 @@
 import re
 
-ENGINES = ["WDL", "CWL", "Nextflow"]
+ENGINES = set(["WDL", "CWL", "NEXTFLOW"])
 
 _wdl_task_regex = r"^([^-]+)(-\d+-\d+.*)?$"
 _nextflow_task_regex = r"^(.+)(\s\(.+\))$"
@@ -22,7 +22,7 @@ def task_base_name(name: str, engine: str) -> str:
         if m:
             return m.group(1)
     # Nextflow
-    elif engine == "Nextflow":
+    elif engine == "NEXTFLOW":
         m = re.match(_nextflow_task_regex, name)
         if m:
             return m.group(1)
@@ -36,26 +36,30 @@ def task_base_name(name: str, engine: str) -> str:
     return name
 
 
+_sizes = {
+    "": 2,
+    "xlarge": 4,
+    "2xlarge": 8,
+    "4xlarge": 16,
+    "8xlarge": 32,
+    "12xlarge": 48,
+    "16xlarge": 64,
+    "24xlarge": 96,
+}
+_families = {"c": 2, "m": 4, "r": 8, "g4dn": 16, "g5": 16}
+
+
 def omics_instance_weight(instance: str) -> int:
     """Compute a numeric weight for an instance to be used in sorting or finding a max or min"""
-    sizes = {
-        "": 2,
-        "x": 4,
-        "2x": 8,
-        "4x": 16,
-        "8x": 32,
-        "12x": 48,
-        "16x": 64,
-        "24x": 96,
-    }
-    families = {"c": 2, "m": 4, "r": 8, "g4dn": 16, "g5": 16}
+    print(instance)
     # remove the "omics." from the string
-    instance.replace("omics.", "")
+    instance = instance.replace("omics.", "")
     # split the instance into family and size
     parts = instance.split(".")
+    print(parts)
     fam = parts[0]
-    size = parts[1] if len(parts) > 1 else ""
+    size = parts[1]
 
-    ccount = sizes[size]
-    weight = ccount * families[fam]
+    ccount = _sizes[size]
+    weight = ccount * _families[fam]
     return weight
