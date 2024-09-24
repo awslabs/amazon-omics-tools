@@ -36,7 +36,7 @@ def task_base_name(name: str, engine: str) -> str:
 
 
 _sizes = {
-    "": 2,
+    "large": 2,
     "xlarge": 4,
     "2xlarge": 8,
     "4xlarge": 16,
@@ -50,12 +50,10 @@ _families = {"c": 2, "m": 4, "r": 8, "g4dn": 16, "g5": 16}
 
 def omics_instance_weight(instance: str) -> int:
     """Compute a numeric weight for an instance to be used in sorting or finding a max or min"""
-    print(instance)
     # remove the "omics." from the string
     instance = instance.replace("omics.", "")
     # split the instance into family and size
     parts = instance.split(".")
-    print(parts)
     fam = parts[0]
     size = parts[1]
 

@@ -11,8 +11,8 @@ hdrs = [
     "meanRunningSeconds",
     "maximumRunningSeconds",
     "stdDevRunningSeconds",
-    "maximumCpuUtilization",
-    "maximumMemoryUtilization",
+    "maximumCpuUtilizationRatio",
+    "maximumMemoryUtilizationRatio",
     "maximumGpusReserved",
     "recommendedCpus",
     "recommendedMemoryGiB",
@@ -47,14 +47,16 @@ def aggregate_and_print(resources_list, pricing, engine, headroom=0.0, out=sys.s
         _aggregate_resources(resources, name, out)
 
 
-def _aggregate_resources(resources, name, out):
+def _aggregate_resources(resources, name, engine, out):
     """Aggregate resources with the same name"""
-    filtered = [r for r in resources if utils.task_base_name(r["name"]) == name]
+    filtered = [r for r in resources if utils.task_base_name(r["name"], engine) == name]
     if filtered:
         res = filtered[0]
         for k in hdrs:
-            if k in ["type", "name"]:
+            if k == "type":
                 continue
+            elif k == "name":
+                res[k] = name
             elif k == "count":
                 res[k] = _do_aggregation(filtered, k, "count")
             elif k.startswith("mean"):
@@ -68,16 +70,16 @@ def _aggregate_resources(resources, name, out):
                 rk = k.replace("maximum", "")[0].lower() + k.replace("maximum", "")[1:]
                 res[k] = _do_aggregation(filtered, rk, "maximum")
             elif k in ["recommendedCpus", "recommendedMemoryGiB"]:
-                _do_aggregation(resources, k, "maximum")
+                res[k] = _do_aggregation(filtered, k, "maximum")
             elif k in ["recommendOmicsInstanceType"]:
-                _do_aggregation(resources, "omicsInstanceTypeMinimum", "maximum")
+               res[k] = _do_aggregation(filtered, "omicsInstanceTypeMinimum", "maximum")
             else:
                 raise ValueError(f"Unhandled aggregation for key: {k}")
 
-        print(",".join([str(res.get(h, "")) for h in hdrs]), file=out)
+    print(",".join([str(res.get(h, "")) for h in hdrs]), file=out)
 
 
-def _do_aggregation(resources, resource_key, operation):
+def _do_aggregation(resources: list, resource_key: str, operation: str):
     if operation == "count":
         return len(resources)
     elif operation == "sum":
@@ -85,7 +87,9 @@ def _do_aggregation(resources, resource_key, operation):
     elif operation == "maximum":
         if resource_key == "omicsInstanceTypeMinimum":
             # special case for instance types
-            return max(resources, key=lambda x: utils.omics_instance_weight(x[resource_key]))
+            instances=[]
+            for r in resources: instances.append(r[resource_key])
+            return max(instances, key=lambda x: utils.omics_instance_weight(x))
         return max([r[resource_key] for r in resources])
     elif operation == "mean":
         return round(statistics.mean([r[resource_key] for r in resources]), 2)
