@@ -12,6 +12,7 @@ Usage: omics-run-analyzer [<runId>...]
                           [--out=<path>]
                           [--plot=<directory>]
                           [--headroom=<float>]
+                          [--write-config=<path>]
                           [--help]
 
 Options:
@@ -24,6 +25,7 @@ Options:
  -o, --out=<path>         Write output to file
  -P, --plot=<directory>   Plot a run timeline to a directory
  -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
+ -c, --write-config=<path>      Output a config file with recommended resources (Nextflow only)
  -h, --help               Show help text
 
 Examples:
@@ -54,8 +56,8 @@ import dateutil
 import dateutil.utils
 import docopt
 from bokeh.plotting import output_file
-
 from . import timeline  # type: ignore
+from . import writeconfig 
 
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
@@ -407,7 +409,6 @@ def get_timeline_event(res, resources):
         "running": (time3 - time2).total_seconds(),
     }
 
-
 if __name__ == "__main__":
     # Parse command-line options
     opts = docopt.docopt(__doc__)
@@ -519,11 +520,33 @@ if __name__ == "__main__":
 
             writer = csv.writer(out, lineterminator="\n")
             writer.writerow(formatted_headers)
+            config = {}
+
             for res in resources:
                 add_metrics(res, resources, pricing, headroom)
                 metrics = res.get("metrics", {})
+                if res['type'] == 'run':
+                    omics = session.client("omics")
+                    wfid = res['workflow'].split('/')[-1]
+                    engine = omics.get_workflow(id=wfid)['engine']
+                if res['type'] == 'task':
+                    task_name = writeconfig.get_base_task(engine, res['name'])
+                    if task_name not in config.keys():
+                        config[task_name] ={
+                            'cpus': metrics['recommendedCpus'],
+                            'mem': metrics['recommendedMemoryGiB']
+                        }
+                    else:
+                        config[task_name] ={
+                            'cpus': max(metrics['recommendedCpus'], config[task_name]['cpus']),
+                            'mem': max(metrics['recommendedMemoryGiB'], config[task_name]['mem'])
+                        }
                 row = [tocsv(metrics.get(h, res.get(h))) for h in hdrs]
                 writer.writerow(row)
+
+            if opts["--write-config"]:
+                filename = opts['--write-config']
+                writeconfig.create_config(engine, config, filename)
         if opts["--out"]:
             sys.stderr.write(f"{exename}: wrote {opts['--out']}\n")
     if opts["--plot"]:
@@ -555,3 +578,4 @@ if __name__ == "__main__":
         title = f"arn: {run['arn']}, name: {run.get('name')}"
 
         timeline.plot_timeline(resources, title=title, max_duration_hrs=run_duration_hrs)
+

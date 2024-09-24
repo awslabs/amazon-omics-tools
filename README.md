@@ -432,6 +432,15 @@ this returns something like:
 omics-run-analyzer: wrote run-1234567.json
 ```
 
+#### Output optimized configuration
+> [!WARNING]
+> Currently this feature only supports Nextflow workflows.
+
+The `--write-config` option will write a new configuration file with the `recommendedCpus` and `recommendedMemoryGiB` as the resource requirements. This will take the maximum values if the task is run multiple times with different inputs. 
+
+```bash
+python -m omics.cli.run_analyzer 123456 --write-config=optimized.config
+```
 ## Security
 
 See [CONTRIBUTING](https://github.com/awslabs/amazon-omics-tools/blob/main/CONTRIBUTING.md#security-issue-notifications) for more information.
