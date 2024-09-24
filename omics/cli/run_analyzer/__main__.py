@@ -475,10 +475,13 @@ if __name__ == "__main__":
                     die("aggregated runs must be from the same engine")
                 if resources:
                     list_of_resources.append(resources)
-            batch.aggregate_and_print(resources_list=list_of_resources, 
-                                      pricing=pricing, engine=engine, 
-                                      headroom=opts["--headroom"], 
-                                      out=opts["--out"])
+            batch.aggregate_and_print(
+                resources_list=list_of_resources,
+                pricing=pricing,
+                engine=engine,
+                headroom=opts["--headroom"],
+                out=opts["--out"],
+            )
 
     # Display output
     with open(opts["--out"] or sys.stdout.fileno(), "w") as out:

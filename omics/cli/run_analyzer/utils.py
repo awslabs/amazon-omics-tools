@@ -12,9 +12,11 @@ def get_engine(workflow_arn: str, client) -> str:
     id = workflow_arn.split("/")[-1]
     return get_engine_from_id(id, client)
 
+
 def get_engine_from_id(workflow_id: str, client) -> str:
     """Get the engine name for the workflow_id using the omics client"""
     return client.get_workflow(id=workflow_id)["engine"]
+
 
 def task_base_name(name: str, engine: str) -> str:
     """Find the base name of the task assuming the naming conventions used by the engine"""
