@@ -12,7 +12,7 @@ Usage: omics-run-analyzer [<runId>...]
                           [--out=<path>]
                           [--plot=<directory>]
                           [--headroom=<float>]
-                          [--config=<path>]
+                          [--write-config=<path>]
                           [--help]
 
 Options:
@@ -25,7 +25,7 @@ Options:
  -o, --out=<path>         Write output to file
  -P, --plot=<directory>   Plot a run timeline to a directory
  -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
- -c, --config=<path>      Output a config file with recommended resources (Nextflow only)
+ -c, --write-config=<path>      Output a config file with recommended resources (Nextflow only)
  -h, --help               Show help text
 
 Examples:
@@ -56,8 +56,8 @@ import dateutil
 import dateutil.utils
 import docopt
 from bokeh.plotting import output_file
-import textwrap
 from . import timeline  # type: ignore
+from . import writeconfig 
 
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
@@ -412,39 +412,6 @@ def get_timeline_event(res, resources):
         "running": (time3 - time2).total_seconds(),
     }
 
-def create_config(engine, task_resources, filename):
-    
-    if engine == 'NEXTFLOW':
-        with open(filename, 'w') as out:
-            for task in task_resources:
-                task_string = textwrap.dedent(f"""
-                withName: {task} {{
-                    cpu = {task_resources[task]['cpus']}
-                    memory = {task_resources[task]['mem']}
-                }}
-                """)
-                out.write(task_string)
-            
-    elif engine == 'CWL':
-        raise ValueError("--config does not currently support CWL workflows")
-    elif engine == 'WDL':
-        raise ValueError("--config does not currently support WDL workflows")
-    else:
-        raise ValueError("Unknown workflow engine")
-
-def get_base_task(engine, task):
-    # Returns the base task name
-    if engine == 'NEXTFLOW':
-        individual_task = task.split(" ")[0]
-        return individual_task
-    elif engine == 'CWL':
-        return task
-    elif engine == 'WDL':
-        return task
-    else:
-        raise ValueError("Unknown workflow engine")
-
-
 if __name__ == "__main__":
     # Parse command-line options
     opts = docopt.docopt(__doc__)
@@ -566,7 +533,7 @@ if __name__ == "__main__":
                     wfid = res['workflow'].split('/')[-1]
                     engine = omics.get_workflow(id=wfid)['engine']
                 if res['type'] == 'task':
-                    task_name = get_base_task(engine, res['name'])
+                    task_name = writeconfig.get_base_task(engine, res['name'])
                     if task_name not in config.keys():
                         config[task_name] ={
                             'cpus': metrics['recommendedCpus'],
@@ -580,9 +547,9 @@ if __name__ == "__main__":
                 row = [tocsv(metrics.get(h, res.get(h))) for h in hdrs]
                 writer.writerow(row)
 
-            if opts["--config"]:
-                filename = opts['--config']
-                create_config(engine, config, filename)
+            if opts["--write-config"]:
+                filename = opts['--write-config']
+                writeconfig.create_config(engine, config, filename)
         if opts["--out"]:
             sys.stderr.write(f"{exename}: wrote {opts['--out']}\n")
     if opts["--plot"]:
