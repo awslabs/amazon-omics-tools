@@ -51,8 +51,6 @@ Examples:
  omics-run-analyzer 1234567 -P out
  # Output a workflow run analysis with 10% headroom added to recommended CPU and memory
  omics-run-analyzer 1234567 -P timeline -H 0.1
- # Analyze multiple runs and output aggregate statistics to stdout as JSON
- omics-run-analyzer -b 1234567 2345678 3456789 --show
  # Analyze multiple runs and output aggregate statistics to a file
  omics-run-analyzer -b 1234567 2345678 3456789 -o out.csv
 """
@@ -73,6 +71,7 @@ from bokeh.plotting import output_file
 
 from . import batch  # type: ignore
 from . import timeline  # type: ignore
+from . import utils
 
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
@@ -465,11 +464,21 @@ if __name__ == "__main__":
             if not resources:
                 die("no workflow run resources")
         if len(runs) >= 1 and opts["--batch"]:
-            list_of_resources = []
+            list_of_resources: list[list[dict]] = []
+            engine: str = None
             for run in runs:
-                resources = get_run_resources(logs, run)
+                resources: list[dict] = get_run_resources(logs, run)
+                run_engine = utils.get_engine_from_id(id=run)
+                if not engine:
+                    engine = run_engine
+                elif engine != run_engine:
+                    die("aggregated runs must be from the same engine")
                 if resources:
                     list_of_resources.append(resources)
+            batch.aggregate_and_print(resources_list=list_of_resources, 
+                                      pricing=pricing, engine=engine, 
+                                      headroom=opts["--headroom"], 
+                                      out=opts["--out"])
 
     # Display output
     with open(opts["--out"] or sys.stdout.fileno(), "w") as out:
