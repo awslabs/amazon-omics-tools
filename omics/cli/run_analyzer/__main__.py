@@ -446,7 +446,7 @@ if __name__ == "__main__":
 
     # Retrieve workflow runs & tasks
     runs = []
-    resources = []
+    resources: list[dict]
     if opts["--file"]:
         with open(opts["--file"]) as f:
             resources = json.load(f)
@@ -459,7 +459,7 @@ if __name__ == "__main__":
         if not runs:
             die("no matching workflow runs")
 
-        if len(runs) == 1 and opts["<runId>"]:
+        elif len(runs) == 1 and opts["<runId>"]:
             resources = get_run_resources(logs, runs[0])
             if not resources:
                 die("no workflow run resources")
@@ -467,7 +467,7 @@ if __name__ == "__main__":
             list_of_resources: list[list[dict]] = []
             engine: str = None
             for run in runs:
-                resources: list[dict] = get_run_resources(logs, run)
+                resources = get_run_resources(logs, run)
                 run_engine = utils.get_engine_from_id(id=run)
                 if not engine:
                     engine = run_engine

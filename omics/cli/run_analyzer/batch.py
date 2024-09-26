@@ -42,7 +42,7 @@ def aggregate_and_print(
     # print hdrs
     print(",".join(hdrs), file=out)
 
-    task_names = sorted(task_names)
+    task_names = set(sorted(task_names))
     for task_name in task_names:
         _aggregate_resources(run_resources_list, task_name, engine, out)
 
