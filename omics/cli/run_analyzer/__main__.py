@@ -320,7 +320,7 @@ def add_run_util(run, tasks):
             metrics[name] /= time
 
 
-def add_metrics(res, resources, pricing, headroom):
+def add_metrics(res, resources, pricing, headroom=0.0):
     """Add run/task metrics"""
     arn = re.split(r"[:/]", res["arn"])
     rtype = arn[-2]
@@ -434,8 +434,6 @@ def get_timeline_event(res, resources):
 if __name__ == "__main__":
     # Parse command-line options
     opts = docopt.docopt(__doc__, version=f"v{importlib.metadata.version('amazon-omics-tools')}")
-    print(opts, file=sys.stderr)
-    exit(0)
 
     try:
         session = boto3.Session(profile_name=opts["--profile"], region_name=opts["--region"])
@@ -468,7 +466,7 @@ if __name__ == "__main__":
             engine: str = None
             for run in runs:
                 resources = get_run_resources(logs, run)
-                run_engine = utils.get_engine_from_id(id=run)
+                run_engine = utils.get_engine(workflow_arn=resources[0]["workflow"], client=session.client("omics"))
                 if not engine:
                     engine = run_engine
                 elif engine != run_engine:
@@ -476,12 +474,13 @@ if __name__ == "__main__":
                 if resources:
                     list_of_resources.append(resources)
             batch.aggregate_and_print(
-                resources_list=list_of_resources,
+                run_resources_list=list_of_resources,
                 pricing=pricing,
                 engine=engine,
-                headroom=opts["--headroom"],
+                headroom=opts["--headroom"] or 0.0,
                 out=opts["--out"],
             )
+            exit(0)
 
     # Display output
     with open(opts["--out"] or sys.stdout.fileno(), "w") as out:
@@ -514,8 +513,6 @@ if __name__ == "__main__":
                     die(f'the --headroom argument {opts["--headroom"]} is not a valid float value')
                 if headroom > 1.0 or headroom < 0.0:
                     die(f"the --headroom argument {headroom} must be between 0.0 and 1.0")
-            if opts["--batch"]:
-                batch.aggregate_and_print(list_of_resources, pricing, opts)
 
             # Show run statistics
             def tocsv(val):
