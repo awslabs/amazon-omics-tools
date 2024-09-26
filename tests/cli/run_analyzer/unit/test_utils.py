@@ -1,6 +1,6 @@
 import unittest
 
-import botocore
+import botocore.session
 from botocore.stub import Stubber
 
 import omics.cli.run_analyzer.utils as utils

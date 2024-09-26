@@ -6,7 +6,7 @@ import omics.cli.run_analyzer.batch as batch
 
 class TestRunAnalyzerBatch(unittest.TestCase):
     def test_do_aggregation(self):
-        resources = [{"key": 2}, {"key": 1}, {"key": 4}]
+        resources = [[{"key": 2}, {"key": 1}, {"key": 4}]]
         result = batch._do_aggregation(resources, "key", "count")
         self.assertEqual(result, 3)
         result = batch._do_aggregation(resources, "key", "sum")
@@ -19,35 +19,37 @@ class TestRunAnalyzerBatch(unittest.TestCase):
         self.assertEqual(result, 1.53)
 
     def test_do_aggregation_with_bad_operation(self):
-        resources = [{"key": 2}, {"key": 1}, {"key": 4}]
+        resources = [[{"key": 2}, {"key": 1}, {"key": 4}]]
         self.assertRaises(ValueError, batch._do_aggregation, resources, "key", "bad_operation")
 
     def test_aggregate_resources(self):
         resources = [
-            {
-                "type": "run",
-                "runningSeconds": 10.0,
-                "cpuUtilizationRatio": 1.0,
-                "memoryUtilizationRatio": 1.0,
-                "gpusReserved": 0,
-                "recommendedCpus": 4,
-                "recommendedMemoryGiB": 8,
-                "omicsInstanceTypeMinimum": "omics.c.large",
-                "estimatedUSD": 1.00,
-                "name": "foo-01-000",
-            },
-            {
-                "type": "run",
-                "runningSeconds": 20.0,
-                "cpuUtilizationRatio": 1.0,
-                "memoryUtilizationRatio": 1.0,
-                "gpusReserved": 0,
-                "recommendedCpus": 4,
-                "recommendedMemoryGiB": 8,
-                "omicsInstanceTypeMinimum": "omics.c.large",
-                "estimatedUSD": 1.00,
-                "name": "foo-02-000",
-            },
+            [
+                {
+                    "type": "run",
+                    "runningSeconds": 10.0,
+                    "cpuUtilizationRatio": 1.0,
+                    "memoryUtilizationRatio": 1.0,
+                    "gpusReserved": 0,
+                    "recommendedCpus": 4,
+                    "recommendedMemoryGiB": 8,
+                    "omicsInstanceTypeMinimum": "omics.c.large",
+                    "estimatedUSD": 1.00,
+                    "name": "foo-01-000",
+                },
+                {
+                    "type": "run",
+                    "runningSeconds": 20.0,
+                    "cpuUtilizationRatio": 1.0,
+                    "memoryUtilizationRatio": 1.0,
+                    "gpusReserved": 0,
+                    "recommendedCpus": 4,
+                    "recommendedMemoryGiB": 8,
+                    "omicsInstanceTypeMinimum": "omics.c.large",
+                    "estimatedUSD": 1.00,
+                    "name": "foo-02-000",
+                },
+            ]
         ]
         with io.StringIO() as result:
             batch._aggregate_resources(
@@ -117,12 +119,9 @@ class TestRunAnalyzerBatch(unittest.TestCase):
             ],
         ]
         header_string = ",".join(batch.hdrs) + "\n"
-        expected = (
-            header_string
-            + "run, foo, 2, 15.0, 30.0, 7.07, 0.5, 0.5, 0, 4, 8, omics.c.large, 1.0, 1.0\n"
-        )
+        expected = header_string + "run,foo,4,20.0,30.0,8.16,1.0,1.0,0,4,8,omics.c.large,1.0,1.0\n"
         with io.StringIO() as result:
             batch.aggregate_and_print(
-                resources_list=resources_list, pricing={}, engine="WDL", out=result
+                run_resources_list=resources_list, pricing={}, engine="WDL", out=result
             )
             self.assertEqual(result.getvalue(), expected)

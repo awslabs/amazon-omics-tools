@@ -86,7 +86,11 @@ def _aggregate_resources(run_resources_list: list[list[dict]], task_name: str, e
     print(",".join([str(aggregate.get(h, "")) for h in hdrs]), file=out)
 
 
-def _do_aggregation(resources: list, resource_key: str, operation: str):
+def _do_aggregation(run_resources_list: list[list[dict]], resource_key: str, operation: str):
+
+    # flatten the list of lists into a single list
+    resources = [r for rs in run_resources_list for r in rs]
+
     if operation == "count":
         return len(resources)
     elif operation == "sum":
