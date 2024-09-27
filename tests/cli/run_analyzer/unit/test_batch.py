@@ -38,8 +38,7 @@ class TestRunAnalyzerBatch(unittest.TestCase):
                     "arn": "arn:aws:omics:us-east-1:123456789012:task/123458",
                 },
                 {
-                    "metrics": {
-                    },
+                    "metrics": {},
                     "name": "foo-02-000",
                     "arn": "arn:aws:omics:us-east-1:123456789012:run/98765",
                 },
@@ -74,8 +73,7 @@ class TestRunAnalyzerBatch(unittest.TestCase):
                     "arn": "arn:aws:omics:us-east-1:123456789012:task/123456",
                 },
                 {
-                    "metrics": {
-                    },
+                    "metrics": {},
                     "name": "foo-02-000",
                     "arn": "arn:aws:omics:us-east-1:123456789012:run/87654",
                 },
