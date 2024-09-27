@@ -22,23 +22,20 @@ Arguments:
  <runId>...               One or more workflow run IDs
 
 Options:
- -b, --batch   Analyze one or more runs and generate aggregate stastics on repeated or scattered tasks
- -f, --file=<path>        Load input from file
- -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
- -o, --out=<path>         Write output to file
- -p, --profile=<profile>  AWS profile
- -P, --plot=<directory>   Plot a run timeline to a directory
- -r, --region=<region>    AWS region
- -t, --time=<interval>    Select runs over a time interval [default: 1day]
- -s, --show               Show run resources with no post-processing (JSON)
- -T, --timeline           Show workflow run timeline
- -f, --file=<path>        Load input from file
- -o, --out=<path>         Write output to file
- -P, --plot=<directory>   Plot a run timeline to a directory
- -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
+ -b, --batch                    Analyze one or more runs and generate aggregate stastics on repeated or scattered tasks
  -c, --write-config=<path>      Output a config file with recommended resources (Nextflow only)
- -h, --help               Show help text
- --version                Show the version of this application
+ -f, --file=<path>              Load input from file
+ -H, --headroom=<float>         Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
+ -o, --out=<path>               Write output to file
+ -p, --profile=<profile>        AWS profile
+ -P, --plot=<directory>         Plot a run timeline to a directory
+ -r, --region=<region>          AWS region
+ -t, --time=<interval>          Select runs over a time interval [default: 1day]
+ -s, --show                     Show run resources with no post-processing (JSON)
+ -T, --timeline                 Show workflow run timeline
+ 
+ -h, --help                     Show help text
+ --version                      Show the version of this application
 
 Examples:
  # Show workflow runs that were running in the last 5 days
