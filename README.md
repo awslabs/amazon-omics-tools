@@ -441,6 +441,41 @@ The `--write-config` option will write a new configuration file with the `recomm
 ```bash
 python -m omics.cli.run_analyzer 123456 --write-config=optimized.config
 ```
+
+#### Aggregate scattered tasks and multiple runs (batch mode)
+
+> [!NOTE]
+> This feature is currently experimental and the output may change in future versions. We encourage feedback on which aggregations are useful and which are not. 
+
+The `--batch` option can be used with a single run to aggregate all scattered tasks into one summarized task report. Non scattered tasks are also aggregated but will have a count of 1.
+
+```bash
+python -m omics.cli.run_analyzer 1234567 --batch
+```
+
+The option may also be used with multiple runs to aggregate all tasks including scattered tasks.
+
+```bash
+python -m omics.cli.run_analyzer 1234567 2345678 3456789 --batch
+```
+
+These statics are reported in CSV format:
+
+- __"type"__: The type of row (currently always task),
+- __"name"__: The base name of the task with any scatter suffix removed
+- __"count"__: The number of times the named task has been observed in the runs
+- __"meanRunningSeconds"__: The average runtime in seconds for the named tasks
+- __"maximumRunningSeconds"__: The longest runtime in seconds for the named task
+- __"stdDevRunningSeconds"__: The standard deviation of runtimes for the named task
+- __"maximumCpuUtilizationRatio"__: The highest CPU utilation ratio seen for any of the named tasks
+- __"maximumMemoryUtilizationRatio"__: The highest memory utilation ratio seen for any of the named tasks
+- __"maximumGpusReserved"__: The largest number of GPUs reserved for the named tasks
+- __"recommendedCpus"__: The recommended number of Cpus that would accommodate all observed instances of a task (including any headroom factor)
+- __"recommendedMemoryGiB"__: The recommended GiBs of memory that would accommodate all observed instances of a task (including and headroom factor)
+- __"recommendOmicsInstanceType"__: The recommended omics instance type that would accomodate all observed instances of a task
+- __"maximumEstimatedUSD"__: The largest estimated cost observed for the named task.
+- __"meanEstimatedUSD"__: The average estimated cost observed for the named task.
+
 ## Security
 
 See [CONTRIBUTING](https://github.com/awslabs/amazon-omics-tools/blob/main/CONTRIBUTING.md#security-issue-notifications) for more information.
