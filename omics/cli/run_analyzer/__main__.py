@@ -33,7 +33,7 @@ Options:
  -t, --time=<interval>          Select runs over a time interval [default: 1day]
  -s, --show                     Show run resources with no post-processing (JSON)
  -T, --timeline                 Show workflow run timeline
- 
+
  -h, --help                     Show help text
  --version                      Show the version of this application
 

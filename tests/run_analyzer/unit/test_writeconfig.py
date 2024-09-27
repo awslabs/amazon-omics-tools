@@ -9,7 +9,7 @@ class TestGetBaseTask(unittest.TestCase):
         self.assertEqual(result, "task1")
 
     def test_get_base_task_cwl(self):
-        result = writeconfig.get_base_task("CWL", "task1 (sample1)")
+        _ = writeconfig.get_base_task("CWL", "task1 (sample1)")
         self.assertRaises(ValueError)
 
 

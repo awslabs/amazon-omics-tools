@@ -2,6 +2,7 @@ import textwrap
 
 
 def create_config(engine, task_resources, filename):
+    """Create a config file based on recommended CPU and Memory values"""
     if engine == "NEXTFLOW":
         with open(filename, "w") as out:
             for task in task_resources:
@@ -24,7 +25,7 @@ def create_config(engine, task_resources, filename):
 
 
 def get_base_task(engine, task):
-    # Returns the base task name
+    """Return the base task name"""
     if engine == "NEXTFLOW":
         individual_task = task.split(" ")[0]
         return individual_task

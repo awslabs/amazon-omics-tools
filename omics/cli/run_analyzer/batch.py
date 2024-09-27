@@ -53,7 +53,6 @@ def _aggregate_resources(
     run_resources_list: list[list[dict]], task_base_name: str, engine: str, out
 ):
     """Aggregate resources with the same base name"""
-
     run_tasks_with_name: list[dict] = []
 
     for run_resources in run_resources_list:
