@@ -104,16 +104,19 @@ def _do_aggregation(resources_list: list[dict], resource_key: str, operation: st
             # special case for instance types
             instances = []
             for r in resources_list:
-                instances.append(r["metrics"][resource_key])
+                if resource_key in r["metrics"]:
+                    instances.append(r["metrics"][resource_key])
             return max(instances, key=lambda x: utils.omics_instance_weight(x))
         else:
-            try:
-                return max([r["metrics"][resource_key] for r in resources_list])
-            except KeyError:
-                print(f"KeyError for {resource_key} in {resources_list}", file=sys.stderr)
+            return round(max([r["metrics"].get(resource_key, 0.0) for r in resources_list]), 4)
     elif operation == "mean":
-        return round(statistics.mean([r["metrics"][resource_key] for r in resources_list]), 2)
+        data = [r["metrics"].get(resource_key, 0.0) for r in resources_list]
+        return round(statistics.mean(data=data), 4)
     elif operation == "stdDev":
-        return round(statistics.stdev([r["metrics"][resource_key] for r in resources_list]), 2)
+        data = [r["metrics"].get(resource_key, 0.0) for r in resources_list]
+        if len(data) > 1:
+            return round(statistics.stdev(data=data), 4)
+        else:
+            return 0.000
     else:
         raise ValueError(f"Invalid aggregation operation: {operation}")
