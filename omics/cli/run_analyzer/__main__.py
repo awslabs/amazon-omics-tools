@@ -463,10 +463,12 @@ if __name__ == "__main__":
                 die("no workflow run resources")
         if len(runs) >= 1 and opts["--batch"]:
             list_of_resources: list[list[dict]] = []
-            engine: str = None
+            engine = ""
             for run in runs:
                 resources = get_run_resources(logs, run)
-                run_engine = utils.get_engine(workflow_arn=resources[0]["workflow"], client=session.client("omics"))
+                run_engine = utils.get_engine(
+                    workflow_arn=resources[0]["workflow"], client=session.client("omics")
+                )
                 if not engine:
                     engine = run_engine
                 elif engine != run_engine:

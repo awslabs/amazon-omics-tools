@@ -18,7 +18,7 @@ class TestRunAnalyzerBatch(unittest.TestCase):
                         "recommendedCpus": 4,
                         "recommendedMemoryGiB": 8,
                         "omicsInstanceTypeMinimum": "omics.c.large",
-                        "estimatedUSD": 1.00
+                        "estimatedUSD": 1.00,
                     },
                     "name": "foo-01-000",
                     "arn": "arn:aws:omics:us-east-1:123456789012:task/111113",
@@ -37,6 +37,12 @@ class TestRunAnalyzerBatch(unittest.TestCase):
                     "name": "foo-02-000",
                     "arn": "arn:aws:omics:us-east-1:123456789012:task/123458",
                 },
+                {
+                    "metrics": {
+                    },
+                    "name": "foo-02-000",
+                    "arn": "arn:aws:omics:us-east-1:123456789012:run/98765",
+                },
             ],
             [
                 {
@@ -48,7 +54,7 @@ class TestRunAnalyzerBatch(unittest.TestCase):
                         "recommendedCpus": 4,
                         "recommendedMemoryGiB": 8,
                         "omicsInstanceTypeMinimum": "omics.c.large",
-                        "estimatedUSD": 1.00
+                        "estimatedUSD": 1.00,
                     },
                     "name": "foo-01-050",
                     "arn": "arn:aws:omics:us-east-1:123456789012:task/111111",
@@ -66,6 +72,12 @@ class TestRunAnalyzerBatch(unittest.TestCase):
                     },
                     "name": "foo-02-010",
                     "arn": "arn:aws:omics:us-east-1:123456789012:task/123456",
+                },
+                {
+                    "metrics": {
+                    },
+                    "name": "foo-02-000",
+                    "arn": "arn:aws:omics:us-east-1:123456789012:run/87654",
                 },
             ],
         ]

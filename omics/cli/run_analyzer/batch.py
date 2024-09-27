@@ -49,7 +49,9 @@ def aggregate_and_print(
         _aggregate_resources(run_resources_list, task_name, engine, out)
 
 
-def _aggregate_resources(run_resources_list: list[list[dict]], task_base_name: str, engine: str, out):
+def _aggregate_resources(
+    run_resources_list: list[list[dict]], task_base_name: str, engine: str, out
+):
     """Aggregate resources with the same base name"""
 
     run_tasks_with_name: list[dict] = []
@@ -105,7 +107,10 @@ def _do_aggregation(resources_list: list[dict], resource_key: str, operation: st
                 instances.append(r["metrics"][resource_key])
             return max(instances, key=lambda x: utils.omics_instance_weight(x))
         else:
-            return max([r["metrics"][resource_key] for r in resources_list])
+            try:
+                return max([r["metrics"][resource_key] for r in resources_list])
+            except KeyError:
+                print(f"KeyError for {resource_key} in {resources_list}", file=sys.stderr)
     elif operation == "mean":
         return round(statistics.mean([r["metrics"][resource_key] for r in resources_list]), 2)
     elif operation == "stdDev":
