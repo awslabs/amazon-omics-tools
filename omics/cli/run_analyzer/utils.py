@@ -1,6 +1,6 @@
 import re
 
-ENGINES = set(["WDL", "CWL", "NEXTFLOW"])
+ENGINES = {"WDL", "CWL", "NEXTFLOW"}
 
 _wdl_task_regex = r"^([^-]+)(-\d+-\d+.*)?$"
 _nextflow_task_regex = r"^(.+)(\s\(.+\))$"
