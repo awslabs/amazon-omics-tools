@@ -467,9 +467,12 @@ These statics are reported in CSV format:
 - __"meanRunningSeconds"__: The average runtime in seconds for the named tasks
 - __"maximumRunningSeconds"__: The longest runtime in seconds for the named task
 - __"stdDevRunningSeconds"__: The standard deviation of runtimes for the named task
-- __"maximumCpuUtilizationRatio"__: The highest CPU utilation ratio seen for any of the named tasks
-- __"maximumMemoryUtilizationRatio"__: The highest memory utilation ratio seen for any of the named tasks
+- __"maximumCpuUtilizationRatio"__: The highest CPU utilization ratio seen for any of the named tasks
+- __"meanCpuUtilizationRation"__: The average CPU utilization ratio for the named task
+- __"maximumMemoryUtilizationRatio"__: The highest memory utilization ratio seen for any of the named tasks
+- __"meanMemoryUtilizationRation"__: The average memory utilization ratio for the named task
 - __"maximumGpusReserved"__: The largest number of GPUs reserved for the named tasks
+- __"meanGpusReserved"__: The average number of GPUs reserved for the named task
 - __"recommendedCpus"__: The recommended number of Cpus that would accommodate all observed instances of a task (including any headroom factor)
 - __"recommendedMemoryGiB"__: The recommended GiBs of memory that would accommodate all observed instances of a task (including and headroom factor)
 - __"recommendOmicsInstanceType"__: The recommended omics instance type that would accomodate all observed instances of a task
