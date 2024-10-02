@@ -22,16 +22,3 @@ def create_config(engine, task_resources, filename):
         raise ValueError("--write-config does not currently support WDL workflows")
     else:
         raise ValueError("Unknown workflow engine")
-
-
-def get_base_task(engine, task):
-    """Return the base task name"""
-    if engine == "NEXTFLOW":
-        individual_task = task.split(" ")[0]
-        return individual_task
-    elif engine == "CWL":
-        return task
-    elif engine == "WDL":
-        return task
-    else:
-        raise ValueError("Unknown workflow engine")

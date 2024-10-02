@@ -573,7 +573,7 @@ if __name__ == "__main__":
                     wfid = res["workflow"].split("/")[-1]
                     engine = omics.get_workflow(id=wfid)["engine"]
                 if res["type"] == "task":
-                    task_name = writeconfig.get_base_task(engine, res["name"])
+                    task_name = utils.task_base_name(res["name"], engine)
                     if task_name not in config.keys():
                         config[task_name] = {
                             "cpus": metrics["recommendedCpus"],

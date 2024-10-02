@@ -12,8 +12,11 @@ hdrs = [
     "maximumRunningSeconds",
     "stdDevRunningSeconds",
     "maximumCpuUtilizationRatio",
+    "meanCpuUtilizationRatio",
     "maximumMemoryUtilizationRatio",
+    "meanMemoryUtilizationRatio",
     "maximumGpusReserved",
+    "meanGpusReserved",
     "recommendedCpus",
     "recommendedMemoryGiB",
     "recommendOmicsInstanceType",
@@ -41,7 +44,7 @@ def aggregate_and_print(
             main.add_metrics(res, run_resources, pricing, headroom)
             task_names.add(utils.task_base_name(res["name"], engine))
 
-    # print hdrs
+    # print headers
     print(",".join(hdrs), file=out)
 
     task_names = set(sorted(task_names))
