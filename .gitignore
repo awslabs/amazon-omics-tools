@@ -5,3 +5,5 @@ __pycache__/
 dist
 test_file
 scripts/
+.idea
+.vscode

@@ -13,38 +13,52 @@ Usage: omics-run-analyzer [<runId>...]
                           [--plot=<directory>]
                           [--headroom=<float>]
                           [--write-config=<path>]
-                          [--help]
+       omics-run-analyzer --batch <runId>... [--profile=<profile>] [--region=<region>] [--headroom=<float>]
+                                             [--out=<path>]
+       omics-run-analyzer (-h --help)
+       omics-run-analyzer --version
+
+Arguments:
+ <runId>...               One or more workflow run IDs
 
 Options:
- -p, --profile=<profile>  AWS profile
- -r, --region=<region>    AWS region
- -t, --time=<interval>    Select runs over a time interval [default: 1day]
- -s, --show               Show run resources with no post-processing (JSON)
- -T, --timeline           Show workflow run timeline
- -f, --file=<path>        Load input from file
- -o, --out=<path>         Write output to file
- -P, --plot=<directory>   Plot a run timeline to a directory
- -H, --headroom=<float>   Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
+ -b, --batch                    Analyze one or more runs and generate aggregate stastics on repeated or scattered tasks
  -c, --write-config=<path>      Output a config file with recommended resources (Nextflow only)
- -h, --help               Show help text
+ -f, --file=<path>              Load input from file
+ -H, --headroom=<float>         Adds a fractional buffer to the size of recommended memory and CPU. Values must be between 0.0 and 1.0.
+ -o, --out=<path>               Write output to file
+ -p, --profile=<profile>        AWS profile
+ -P, --plot=<directory>         Plot a run timeline to a directory
+ -r, --region=<region>          AWS region
+ -t, --time=<interval>          Select runs over a time interval [default: 1day]
+ -s, --show                     Show run resources with no post-processing (JSON)
+ -T, --timeline                 Show workflow run timeline
+
+ -h, --help                     Show help text
+ --version                      Show the version of this application
 
 Examples:
  # Show workflow runs that were running in the last 5 days
  # (supported time units include minutes, hours, days, weeks, or years)
  omics-run-analyzer --time=5days
- # Retrieve and analyze a specific workflow run by ID
+ # Retrieve and analyze a specific workflow run by ID writing output to ./run-1234567.csv
  omics-run-analyzer 1234567 -o run-1234567.csv
+ # Show the completion time and UUID (only) of multiple runs
+ omics-run-analyzer 1234567 2345678
  # Retrieve and analyze a specific workflow run by ID and UUID
  omics-run-analyzer 2345678:12345678-1234-5678-9012-123456789012
  # Output workflow run and tasks in JSON format
  omics-run-analyzer 1234567 -s -o run-1234567.json
  # Plot a timeline of a workflow run and write the plot the HTML to "out/"
  omics-run-analyzer 1234567 -P out
- # Putput a workflow run analysis with 10% headroom added to recommended CPU and memory
+ # Output a workflow run analysis with 10% headroom added to recommended CPU and memory
  omics-run-analyzer 1234567 -P timeline -H 0.1
+ # Analyze multiple runs and output aggregate statistics to a file
+ omics-run-analyzer -b 1234567 2345678 3456789 -o out.csv
 """
 import csv
 import datetime
+import importlib.metadata
 import json
 import math
 import os
@@ -56,8 +70,10 @@ import dateutil
 import dateutil.utils
 import docopt
 from bokeh.plotting import output_file
+
+from . import batch  # type: ignore
 from . import timeline  # type: ignore
-from . import writeconfig 
+from . import utils, writeconfig
 
 exename = os.path.basename(sys.argv[0])
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
@@ -201,7 +217,11 @@ def get_runs(logs, runs, opts):
                 "logGroupName": OMICS_LOG_GROUP,
                 "logStreamNamePrefix": prefix,
             }
-            streams.extend(get_streams(logs, rqst))
+            returned_streams = get_streams(logs, rqst)
+            if returned_streams and len(returned_streams) > 0:
+                streams.extend(get_streams(logs, rqst))
+            else:
+                die(f"run {run[-1]} not found")
     else:
         # Get runs in time range
         start_time = datetime.datetime.now() - parse_time_delta(opts["--time"])
@@ -299,7 +319,7 @@ def add_run_util(run, tasks):
             metrics[name] /= time
 
 
-def add_metrics(res, resources, pricing, headroom):
+def add_metrics(res, resources, pricing, headroom=0.0):
     """Add run/task metrics"""
     arn = re.split(r"[:/]", res["arn"])
     rtype = arn[-2]
@@ -409,9 +429,10 @@ def get_timeline_event(res, resources):
         "running": (time3 - time2).total_seconds(),
     }
 
+
 if __name__ == "__main__":
     # Parse command-line options
-    opts = docopt.docopt(__doc__)
+    opts = docopt.docopt(__doc__, version=f"v{importlib.metadata.version('amazon-omics-tools')}")
 
     try:
         session = boto3.Session(profile_name=opts["--profile"], region_name=opts["--region"])
@@ -422,7 +443,7 @@ if __name__ == "__main__":
 
     # Retrieve workflow runs & tasks
     runs = []
-    resources = []
+    resources: list[dict]
     if opts["--file"]:
         with open(opts["--file"]) as f:
             resources = json.load(f)
@@ -435,10 +456,32 @@ if __name__ == "__main__":
         if not runs:
             die("no matching workflow runs")
 
-        if len(runs) == 1 and opts["<runId>"]:
+        elif len(runs) == 1 and opts["<runId>"]:
             resources = get_run_resources(logs, runs[0])
             if not resources:
                 die("no workflow run resources")
+        if len(runs) >= 1 and opts["--batch"]:
+            list_of_resources: list[list[dict]] = []
+            engine = ""
+            for run in runs:
+                resources = get_run_resources(logs, run)
+                run_engine = utils.get_engine(
+                    workflow_arn=resources[0]["workflow"], client=session.client("omics")
+                )
+                if not engine:
+                    engine = run_engine
+                elif engine != run_engine:
+                    die("aggregated runs must be from the same engine")
+                if resources:
+                    list_of_resources.append(resources)
+            batch.aggregate_and_print(
+                run_resources_list=list_of_resources,
+                pricing=pricing,
+                engine=engine,
+                headroom=opts["--headroom"] or 0.0,
+                out=opts["--out"],
+            )
+            exit(0)
 
     # Display output
     with open(opts["--out"] or sys.stdout.fileno(), "w") as out:
@@ -520,32 +563,32 @@ if __name__ == "__main__":
 
             writer = csv.writer(out, lineterminator="\n")
             writer.writerow(formatted_headers)
-            config = {}
+            config: dict = {}
 
             for res in resources:
                 add_metrics(res, resources, pricing, headroom)
                 metrics = res.get("metrics", {})
-                if res['type'] == 'run':
+                if res["type"] == "run":
                     omics = session.client("omics")
-                    wfid = res['workflow'].split('/')[-1]
-                    engine = omics.get_workflow(id=wfid)['engine']
-                if res['type'] == 'task':
-                    task_name = writeconfig.get_base_task(engine, res['name'])
+                    wfid = res["workflow"].split("/")[-1]
+                    engine = omics.get_workflow(id=wfid)["engine"]
+                if res["type"] == "task":
+                    task_name = utils.task_base_name(res["name"], engine)
                     if task_name not in config.keys():
-                        config[task_name] ={
-                            'cpus': metrics['recommendedCpus'],
-                            'mem': metrics['recommendedMemoryGiB']
+                        config[task_name] = {
+                            "cpus": metrics["recommendedCpus"],
+                            "mem": metrics["recommendedMemoryGiB"],
                         }
                     else:
-                        config[task_name] ={
-                            'cpus': max(metrics['recommendedCpus'], config[task_name]['cpus']),
-                            'mem': max(metrics['recommendedMemoryGiB'], config[task_name]['mem'])
+                        config[task_name] = {
+                            "cpus": max(metrics["recommendedCpus"], config[task_name]["cpus"]),
+                            "mem": max(metrics["recommendedMemoryGiB"], config[task_name]["mem"]),
                         }
                 row = [tocsv(metrics.get(h, res.get(h))) for h in hdrs]
                 writer.writerow(row)
 
             if opts["--write-config"]:
-                filename = opts['--write-config']
+                filename = opts["--write-config"]
                 writeconfig.create_config(engine, config, filename)
         if opts["--out"]:
             sys.stderr.write(f"{exename}: wrote {opts['--out']}\n")
@@ -578,4 +621,3 @@ if __name__ == "__main__":
         title = f"arn: {run['arn']}, name: {run.get('name')}"
 
         timeline.plot_timeline(resources, title=title, max_duration_hrs=run_duration_hrs)
-
