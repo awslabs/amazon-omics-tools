@@ -81,7 +81,8 @@ class TestRunAnalyzerBatch(unittest.TestCase):
         ]
         header_string = ",".join(batch.hdrs) + "\n"
         expected = (
-            header_string + "task,foo,4,20.0,30.0,8.165,1.0,0.75,1.0,0.75,0,0,4,8,omics.c.large,1.0,1.0\n"
+            header_string
+            + "task,foo,4,20.0,30.0,8.165,1.0,0.75,1.0,0.75,0,0,4,8,omics.c.large,1.0,1.0\n"
         )
         with io.StringIO() as result:
             batch.aggregate_and_print(
