@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Command-line tool to create a sample sheet
+Command-line tool to create a sample sheet from active readsets
 
 Usage: omics-samples [<sequenceStoreId>]
                    [--start=<date>]
@@ -20,11 +20,11 @@ Examples:
 import boto3
 import docopt
 from dateutil import parser
+import logging
 
-session = boto3.Session()
-omics = session.client("omics")
 omics_client = boto3.client("omics")
 
+logging.basicConfig(level=logging.INFO)
 
 def get_samples(sqnid, filter):
     samples = []
@@ -35,6 +35,7 @@ def get_samples(sqnid, filter):
     for page in paginator.paginate(**params):
         read_sets = page.get("readSets", [])
         for read_set in read_sets:
+            logging.info(f"Processing read set {read_set['id']}")
             data = omics_client.get_read_set_metadata(id=read_set["id"], sequenceStoreId=sqnid)
             sample = data["sampleId"]
             uri = data["files"]["source1"]["s3Access"]["s3Uri"]
@@ -43,7 +44,9 @@ def get_samples(sqnid, filter):
 
 
 def get_filter(cli_opts) -> dict:
-    filter = {}
+    filter = {
+        "status": "ACTIVE"
+    }
     if opts["--start"]:
         filter["createdAfter"] = parser.parse(opts["--start"])
     if opts["--end"]:
