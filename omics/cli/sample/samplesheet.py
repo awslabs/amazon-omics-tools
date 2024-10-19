@@ -15,6 +15,11 @@ Usage: omics-samples [<sequenceStoreId>]
 Options:
  -s, --start=<date>            Show runs completed after specified date/time (UTC)
  -e, --end=<date>              Show runs completed before specified date/time (UTC)
+ --sampleId=<sampleId>         Select the sampleId
+ --subjectId=<subjectId>       Select the subjectId
+ -o, --out=<path>              Write output to file
+ -p, --profile=<profile>       AWS profile
+ -r, --region=<region>         AWS region
  -h, --help                    Show help text
 
 Examples:
@@ -26,6 +31,7 @@ from botocore.config import Config
 import docopt
 from dateutil import parser
 import logging
+import sys 
 
 opts = docopt.docopt(__doc__)
 config = Config(retries={"max_attempts": 10, "mode": "standard"})
@@ -48,7 +54,7 @@ def get_samples(sqnid, filter):
             data = omics_client.get_read_set_metadata(id=read_set["id"], sequenceStoreId=sqnid)
             sample = data["sampleId"]
             uri = data["files"]["source1"]["s3Access"]["s3Uri"]
-            samples.append(f"{sample},{uri}")
+            samples.append(f"{sqnid},{sample},{uri}")
     return samples
 
 
@@ -58,11 +64,17 @@ def get_filter(cli_opts) -> dict:
         filter["createdAfter"] = parser.parse(opts["--start"])
     if opts["--end"]:
         filter["createdBefore"] = parser.parse(opts["--end"])
+    if opts["--sampleId"]:
+        filter["sampleId"] = opts["--sampleId"]
+    if opts["--subjectId"]:
+        filter["subjectId"] = opts["--subjectId"]
     return filter
 
 
 def write_samples(samples, outpath):
+    headers = ["sequenceStoreId", "sampleId", "s3Uri"]
     with open(outpath, "w") as out:
+        out.write(",".join(headers) + "\n")
         for sample in samples:
             out.write(sample + "\n")
 
@@ -79,4 +91,8 @@ def main():
 
 
 if __name__ == "__main__":
+    if opts["--sampleId"]:
+        if not opts["--subjectId"]:
+            logging.error("If using --sampleId you must also specify --sampleId")
+            sys.exit(1)
     main()
