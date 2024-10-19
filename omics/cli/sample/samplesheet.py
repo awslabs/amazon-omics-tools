@@ -6,6 +6,10 @@ Usage: omics-samples [<sequenceStoreId>]
                    [--start=<date>]
                    [--end=<date>]
                    [--out=<path>]
+                   [--profile=<profile>]
+                   [--region=<region>]
+                   [--sampleId=<sample>]
+                   [--subjectId=<subject>]
                    [--help]
 
 Options:
@@ -18,13 +22,18 @@ Examples:
  omics-samples 1234567890 -s 2023-07-01
 """
 import boto3
+from botocore.config import Config
 import docopt
 from dateutil import parser
 import logging
 
-omics_client = boto3.client("omics")
+opts = docopt.docopt(__doc__)
+config = Config(retries={"max_attempts": 10, "mode": "standard"})
+session = boto3.session.Session(profile_name=opts["--profile"], region_name=opts["--region"])
+omics_client = session.client("omics", config=config)
 
 logging.basicConfig(level=logging.INFO)
+
 
 def get_samples(sqnid, filter):
     samples = []
@@ -44,9 +53,7 @@ def get_samples(sqnid, filter):
 
 
 def get_filter(cli_opts) -> dict:
-    filter = {
-        "status": "ACTIVE"
-    }
+    filter = {"status": "ACTIVE"}
     if opts["--start"]:
         filter["createdAfter"] = parser.parse(opts["--start"])
     if opts["--end"]:
@@ -72,5 +79,4 @@ def main():
 
 
 if __name__ == "__main__":
-    opts = docopt.docopt(__doc__)
     main()
