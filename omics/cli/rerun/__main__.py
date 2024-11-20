@@ -10,10 +10,14 @@ Usage: omics-rerun [<runIdOrArn>...]
                    [--run-id=<id>]
                    [--role-arn=<arn>]
                    [--name=<name>]
+                   [--cache-id=<id>]
+                   [--cache-behavior=<value>]
                    [--run-group-id=<id>]
                    [--priority=<priority>]
                    [--parameter=<key=value>...]
                    [--storage-capacity=<value>]
+                   [--storage-type=<value>]
+                   [--workflow-owner-id=<value>]
                    [--retention-mode=<mode>]
                    [--output-uri=<uri>]
                    [--log-level=<level>]
@@ -32,10 +36,14 @@ Options:
  --run-id=<id>                 Override original run parameter
  --role-arn=<arn>              Override original run parameter
  --name=<name>                 Override original run parameter
+ --cache-id <value>            Override original run parameter, use NONE to clear an old cache id
+ --cache-behavior <value>      Override original run parameter, CACHE_ON_FAILURE or CACHE_ALWAYS
  --run-group-id=<id>           Override original run parameter
  --priority=<priority>         Override original run parameter
  --parameter=<key=value>...    Override original run parameter
  --storage-capacity=<value>    Override original run parameter
+ --storage-type=<value>        Override original run parameter, DYNAMIC or STATIC
+ --workflow-owner-id=<value>   Override original run parameter, required for shared workflows
  --retention-mode=<mode>       Override original run parameter
  --output-uri=<uri>            Override original run parameter
  --log-level=<level>           Override original run parameter
@@ -152,6 +160,8 @@ def get_run_resources(logs, run):
     resources = []
     while True:
         resp = logs.get_log_events(**rqst)
+        if not resp.get("events"):
+            break
         for evt in resp.get("events", []):
             try:
                 resources.append(json.loads(evt["message"]))
@@ -161,7 +171,8 @@ def get_run_resources(logs, run):
         if not token or token == rqst.get("nextToken"):
             break
         rqst["nextToken"] = token
-    return sorted(resources, key=lambda x: x.get("creationTime"))
+    # cached resources have no creation time so we set an arbitray default
+    return sorted(resources, key=lambda x: x.get("creationTime", "1970-01-01T00:00:00.000Z"))
 
 
 def get_workflow_type(run):
@@ -215,9 +226,45 @@ def start_run_request(run, opts={}):
             rqst["parameters"] = {}
         rqst["parameters"][m.group(1)] = m.group(2)
     if rqst["workflowType"] != "READY2RUN":
-        set_param(rqst, "storageCapacity", "--storage-capacity")
-        if "storageCapacity" in rqst:
-            rqst["storageCapacity"] = int(rqst["storageCapacity"])
+        if opts.get("--storage-capacity") or run.get("storageCapacity"):
+            set_param(rqst, "storageCapacity", "--storage-capacity")
+            if "storageCapacity" in rqst:
+                rqst["storageCapacity"] = int(rqst["storageCapacity"])
+                if rqst["storageCapacity"] < 1000 and run["storageType"] == "DYNAMIC":
+                    rqst.pop("storageCapacity", None)
+
+        if opts.get("--storage-type") or run.get("storageType"):
+            set_param(rqst, "storageType", "--storage-type")
+            if rqst["storageType"] not in ("DYNAMIC", "STATIC"):
+                die(f"invalid --storage-type: {rqst['storageType']} (expecting DYNAMIC or STATIC)")
+            if rqst["storageType"] == "DYNAMIC":
+                # remove storageCapacity from the request
+                rqst.pop("storageCapacity", None)
+
+        if opts.get("--workflow-owner-id") or run.get("workflowOwnerId"):
+            set_param(rqst, "workflowOwnerId", "--workflow-owner-id")
+
+        if opts.get("--cache-id") or run.get("runCache"):
+            if opts.get("--cache-id"):
+                set_param(rqst, "cacheId", "--cache-id")
+            elif run.get("runCache"):
+                set_param(rqst, "cacheId", None, run["runCache"].split("/")[-1])
+            if opts.get("--cache-id") == "NONE":
+                rqst.pop("cacheId", None)
+
+        if opts.get("--cache-behavior") or run.get("runCacheBehavior"):
+            if opts.get("--cache-behavior"):
+                set_param(rqst, "cacheBehavior", "--cache-behavior")
+            elif run.get("runCacheBehavior"):
+                set_param(rqst, "cacheBehavior", None, run["runCacheBehavior"])
+            if rqst["cacheBehavior"] not in ("CACHE_ON_FAILURE", "CACHE_ALWAYS"):
+                die(
+                    f"invalid --cache-behavior: {rqst['cacheBehavior']} (expecting CACHE_ON_FAILURE or CACHE_ALWAYS)"
+                )
+            if opts.get("--cache-id") == "NONE":
+                # remove cacheBehavior from the request
+                rqst.pop("cacheBehavior", None)
+
     set_param(rqst, "retentionMode", "--retention-mode")
     set_param(rqst, "outputUri", "--output-uri")
     set_param(rqst, "logLevel", "--log-level")
