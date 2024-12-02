@@ -254,7 +254,7 @@ def get_run_resources(logs, run):
         if not token or token == rqst.get("nextToken"):
             done = True
         rqst["nextToken"] = token
-    return sorted(resources, key=lambda x: x.get("creationTime"))
+    return sorted(resources, key=lambda x: x.get("creationTime", "1970-01-01"))
 
 
 def add_run_util(run, tasks):
