@@ -1,25 +1,28 @@
-#!/usr/bin/env python3
 """
 Generate statistics for a completed HealthOmics workflow run
 
 Usage: omics-run-analyzer [<runId>...]
                           [--profile=<profile>]
                           [--region=<region>]
-                          [--time=<interval>]
                           [--show]
-                          [--timeline]
                           [--file=<path>]
                           [--out=<path>]
                           [--plot=<directory>]
                           [--headroom=<float>]
                           [--write-config=<path>]
+                          [--verbose]
+       omics-run-analyzer --timeline <runId> [--profile=<profile>] [--region=<region>] [--vebose]
+       omics-run-analyzer --time <interval>  [--profile=<profile>] [--region=<region>] [--vebose]
        omics-run-analyzer --batch <runId>... [--profile=<profile>] [--region=<region>] [--headroom=<float>]
-                                             [--out=<path>]
+                                             [--out=<path>] [--verbose]
        omics-run-analyzer (-h --help)
        omics-run-analyzer --version
 
 Arguments:
+ <interval>               Select runs over a time interval [default: 1day]
  <runId>...               One or more workflow run IDs
+ <path>                   Path to a file or directory
+
 
 Options:
  -b, --batch                    Analyze one or more runs and generate aggregate stastics on repeated or scattered tasks
@@ -33,6 +36,7 @@ Options:
  -t, --time=<interval>          Select runs over a time interval [default: 1day]
  -s, --show                     Show run resources with no post-processing (JSON)
  -T, --timeline                 Show workflow run timeline
+ -V, --verbose                  Verbose output
 
  -h, --help                     Show help text
  --version                      Show the version of this application
@@ -56,10 +60,12 @@ Examples:
  # Analyze multiple runs and output aggregate statistics to a file
  omics-run-analyzer -b 1234567 2345678 3456789 -o out.csv
 """
+
 import csv
 import datetime
 import importlib.metadata
 import json
+import logging
 import math
 import os
 import re
@@ -76,6 +82,11 @@ from . import timeline  # type: ignore
 from . import utils, writeconfig
 
 exename = os.path.basename(sys.argv[0])
+logging.basicConfig(
+    format="%(asctime)s run_analyzer:%(levelname)s - %(message)s", level=logging.WARNING
+)
+logger = logging.getLogger(exename)
+
 OMICS_LOG_GROUP = "/aws/omics/WorkflowLog"
 OMICS_SERVICE_CODE = "AmazonOmics"
 PRICING_AWS_REGION = "us-east-1"  # Pricing service endpoint
@@ -254,7 +265,7 @@ def get_run_resources(logs, run):
         if not token or token == rqst.get("nextToken"):
             done = True
         rqst["nextToken"] = token
-    return sorted(resources, key=lambda x: x.get("creationTime"))
+    return sorted(resources, key=lambda x: x.get("creationTime", "1970-01-01"))
 
 
 def add_run_util(run, tasks):
@@ -433,6 +444,11 @@ def get_timeline_event(res, resources):
 if __name__ == "__main__":
     # Parse command-line options
     opts = docopt.docopt(__doc__, version=f"v{importlib.metadata.version('amazon-omics-tools')}")
+    if opts["--verbose"]:
+        # print(opts, file=sys.stderr)
+        logger.setLevel(logging.DEBUG)
+
+    logger.debug("command line options: %s", opts)
 
     try:
         session = boto3.Session(profile_name=opts["--profile"], region_name=opts["--region"])
@@ -443,7 +459,7 @@ if __name__ == "__main__":
 
     # Retrieve workflow runs & tasks
     runs = []
-    resources: list[dict]
+    resources: list[dict] = []
     if opts["--file"]:
         with open(opts["--file"]) as f:
             resources = json.load(f)
@@ -571,19 +587,24 @@ if __name__ == "__main__":
                 if res["type"] == "run":
                     omics = session.client("omics")
                     wfid = res["workflow"].split("/")[-1]
-                    engine = omics.get_workflow(id=wfid)["engine"]
-                if res["type"] == "task":
-                    task_name = utils.task_base_name(res["name"], engine)
-                    if task_name not in config.keys():
-                        config[task_name] = {
-                            "cpus": metrics["recommendedCpus"],
-                            "mem": metrics["recommendedMemoryGiB"],
-                        }
-                    else:
-                        config[task_name] = {
-                            "cpus": max(metrics["recommendedCpus"], config[task_name]["cpus"]),
-                            "mem": max(metrics["recommendedMemoryGiB"], config[task_name]["mem"]),
-                        }
+                    if opts["--write-config"]:
+                        engine = omics.get_workflow(id=wfid)["engine"]
+                        if res["type"] == "task":
+                            task_name = utils.task_base_name(res["name"], engine)
+                            if task_name not in config.keys():
+                                config[task_name] = {
+                                    "cpus": metrics["recommendedCpus"],
+                                    "mem": metrics["recommendedMemoryGiB"],
+                                }
+                            else:
+                                config[task_name] = {
+                                    "cpus": max(
+                                        metrics["recommendedCpus"], config[task_name]["cpus"]
+                                    ),
+                                    "mem": max(
+                                        metrics["recommendedMemoryGiB"], config[task_name]["mem"]
+                                    ),
+                                }
                 row = [tocsv(metrics.get(h, res.get(h))) for h in hdrs]
                 writer.writerow(row)
 
