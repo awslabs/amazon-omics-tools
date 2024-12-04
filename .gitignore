@@ -4,6 +4,7 @@ __pycache__/
 *.iml
 dist
 test_file
+examples/
 scripts/
 .idea
 .vscode
