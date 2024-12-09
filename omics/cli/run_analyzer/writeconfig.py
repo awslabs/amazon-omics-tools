@@ -9,7 +9,7 @@ def create_config(engine, task_resources, filename):
                 task_string = textwrap.dedent(
                     f"""
                 withName: {task} {{
-                    cpu = {task_resources[task]['cpus']}
+                    cpus = {task_resources[task]['cpus']}
                     memory = {task_resources[task]['mem']}
                 }}
                 """
