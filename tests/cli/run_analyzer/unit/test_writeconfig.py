@@ -1,0 +1,55 @@
+import os
+import tempfile
+
+from omics.cli.run_analyzer.writeconfig import create_config
+
+
+def test_create_config():
+    """Test the create_config function"""
+    # Test data
+    task_resources = {"task1": {"cpus": 2, "mem": "4GB"}, "task2": {"cpus": 4, "mem": "8GB"}}
+
+    # Test NEXTFLOW config creation
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        create_config("NEXTFLOW", task_resources, tmp.name)
+
+        with open(tmp.name) as f:
+            content = f.read()
+
+        # Clean up
+        os.unlink(tmp.name)
+
+        # Verify content
+        expected = """
+withName: task1 {
+    cpus = 2
+    memory = 4GB
+}
+
+withName: task2 {
+    cpus = 4
+    memory = 8GB
+}
+"""
+        assert content.strip() == expected.strip()
+
+    # Test invalid engine
+    try:
+        create_config("INVALID", task_resources, "test.config")
+        assert False, "Should have raised ValueError"
+    except ValueError:
+        pass
+
+    # Test CWL
+    try:
+        create_config("CWL", task_resources, "test.config")
+        assert False, "Should have raised ValueError"
+    except ValueError:
+        pass
+
+    # Test WDL
+    try:
+        create_config("WDL", task_resources, "test.config")
+        assert False, "Should have raised ValueError"
+    except ValueError:
+        pass
