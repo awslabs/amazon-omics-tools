@@ -8,7 +8,7 @@ from omics.cli.run_analyzer.writeconfig import create_config
 def test_create_config():
     """Test the create_config function"""
     # Test data
-    task_resources = {"task1": {"cpus": 2, "mem": "4GB"}, "task2": {"cpus": 4, "mem": "8GB"}}
+    task_resources = {"task1": {"cpus": 2, "mem": "4"}, "task2": {"cpus": 4, "mem": "8"}}
 
     # Test NEXTFLOW config creation
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
@@ -18,19 +18,19 @@ def test_create_config():
             content = f.read()
 
         # Clean up
-        # os.unlink(tmp.name)
+        os.unlink(tmp.name)
 
         # Verify content
         expected = textwrap.dedent(
             """process {
 withName: task1 {
     cpus = 2
-    memory = 4GB
+    memory = 4.GB
 }
 
 withName: task2 {
     cpus = 4
-    memory = 8GB
+    memory = 8.GB
 }
 }"""
         )
