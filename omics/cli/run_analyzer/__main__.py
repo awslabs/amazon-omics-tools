@@ -596,9 +596,7 @@ if __name__ == "__main__":
                             }
                         else:
                             config[task_name] = {
-                                "cpus": max(
-                                    metrics["recommendedCpus"], config[task_name]["cpus"]
-                                ),
+                                "cpus": max(metrics["recommendedCpus"], config[task_name]["cpus"]),
                                 "mem": max(
                                     metrics["recommendedMemoryGiB"], config[task_name]["mem"]
                                 ),
