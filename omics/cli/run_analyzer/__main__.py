@@ -336,7 +336,6 @@ def add_metrics(res, resources, pricing, headroom=0.0):
     rtype = arn[-2]
     region = arn[3]
     res["type"] = rtype
-
     headroom_multiplier = 1 + headroom
 
     metrics = res.get("metrics", {})
@@ -580,31 +579,30 @@ if __name__ == "__main__":
             writer = csv.writer(out, lineterminator="\n")
             writer.writerow(formatted_headers)
             config: dict = {}
-
+            omics = session.client("omics")
             for res in resources:
                 add_metrics(res, resources, pricing, headroom)
                 metrics = res.get("metrics", {})
-                if res["type"] == "run":
-                    omics = session.client("omics")
-                    wfid = res["workflow"].split("/")[-1]
-                    if opts["--write-config"]:
+                if opts["--write-config"]:
+                    if res["type"] == "run":
+                        wfid = res["workflow"].split("/")[-1]
                         engine = omics.get_workflow(id=wfid)["engine"]
-                        if res["type"] == "task":
-                            task_name = utils.task_base_name(res["name"], engine)
-                            if task_name not in config.keys():
-                                config[task_name] = {
-                                    "cpus": metrics["recommendedCpus"],
-                                    "mem": metrics["recommendedMemoryGiB"],
-                                }
-                            else:
-                                config[task_name] = {
-                                    "cpus": max(
-                                        metrics["recommendedCpus"], config[task_name]["cpus"]
-                                    ),
-                                    "mem": max(
-                                        metrics["recommendedMemoryGiB"], config[task_name]["mem"]
-                                    ),
-                                }
+                    if res["type"] == "task":
+                        task_name = utils.task_base_name(res["name"], engine)
+                        if task_name not in config.keys():
+                            config[task_name] = {
+                                "cpus": metrics["recommendedCpus"],
+                                "mem": metrics["recommendedMemoryGiB"],
+                            }
+                        else:
+                            config[task_name] = {
+                                "cpus": max(
+                                    metrics["recommendedCpus"], config[task_name]["cpus"]
+                                ),
+                                "mem": max(
+                                    metrics["recommendedMemoryGiB"], config[task_name]["mem"]
+                                ),
+                            }
                 row = [tocsv(metrics.get(h, res.get(h))) for h in hdrs]
                 writer.writerow(row)
 
