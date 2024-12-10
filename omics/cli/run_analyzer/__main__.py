@@ -579,12 +579,11 @@ if __name__ == "__main__":
             writer = csv.writer(out, lineterminator="\n")
             writer.writerow(formatted_headers)
             config: dict = {}
+            omics = session.client("omics")
             for res in resources:
                 add_metrics(res, resources, pricing, headroom)
                 metrics = res.get("metrics", {})
                 if opts["--write-config"]:
-                    omics = session.client("omics")
-                    
                     if res["type"] == "run":
                         wfid = res["workflow"].split("/")[-1]
                         engine = omics.get_workflow(id=wfid)["engine"]
