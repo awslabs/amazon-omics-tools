@@ -1,5 +1,6 @@
 import os
 import tempfile
+import textwrap
 
 from omics.cli.run_analyzer.writeconfig import create_config
 
@@ -17,10 +18,11 @@ def test_create_config():
             content = f.read()
 
         # Clean up
-        os.unlink(tmp.name)
+        # os.unlink(tmp.name)
 
         # Verify content
-        expected = """
+        expected = textwrap.dedent(
+            """process {
 withName: task1 {
     cpus = 2
     memory = 4GB
@@ -30,8 +32,9 @@ withName: task2 {
     cpus = 4
     memory = 8GB
 }
-"""
-        assert content.strip() == expected.strip()
+}"""
+        )
+    assert content.strip() == expected.strip()
 
     # Test invalid engine
     try:
