@@ -33,7 +33,7 @@ def _get_task_timings_data(tasks, time_units="min"):
     ]
     if not filtered_tasks:
         print(
-            "No tasks found with timing data, possibly all tasks were cached a plot cannot be created",
+            "No tasks found with timing data, possibly all tasks were cached, a plot cannot be created",
             file=sys.stderr,
         )
         return pd.DataFrame()
@@ -41,6 +41,9 @@ def _get_task_timings_data(tasks, time_units="min"):
     tare = min([_parse_time_str(task["creationTime"]) for task in filtered_tasks])
 
     for i, task in enumerate(filtered_tasks):
+        task["creationTime"] = _parse_time_str(task["creationTime"])
+        task["startTime"] = _parse_time_str(task["startTime"])
+        task["stopTime"] = _parse_time_str(task["stopTime"])
         task["cpus"] = task.get("cpus", 0)
         task["gpus"] = task.get("gpus", 0)
         task["memory"] = task.get("memory", 0)
