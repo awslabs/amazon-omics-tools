@@ -21,7 +21,12 @@ SDK and CLI Tools for working with the AWS HealthOmics Service.
     - [Omics Run Analyzer](#omics-run-analyzer)
       - [List completed runs](#list-completed-runs)
       - [Analyze a specific workflow run](#analyze-a-specific-workflow-run)
+      - [Run optimization and estimated cost reduction](#run-optimization-and-estimated-cost-reduction)
+        - [Adding headroom to recommendations](#add-headroom-to-recommendations)
       - [Output workflow run manifest in JSON format](#output-workflow-run-manifest-in-json-format)
+      - [Output optimized configuration (for Nextflow)](#output-optimized-configuration)
+      - [Aggregate scattered tasks and multiple runs (batch mode)](#aggregate-scattered-tasks-and-multiple-runs-batch-mode)
+      
   - [Security](#security)
   - [License](#license)
 
