@@ -357,6 +357,12 @@ Workflow run IDs (<completionTime> <UUID>):
 python -m omics.cli.run_analyzer 1234567 -o run-1234567.csv
 ```
 
+##### providing a UUID
+If a run ID is ambiguous, you can provide a UUID along with the run ID in the following way:
+```bash
+python -m omics.cli.run_analyzer 1234567:2eca9876-ac33-98cd-0298-11cc59c05273 -o run-1234567.csv
+```
+
 this returns something like:
 
 ```text
