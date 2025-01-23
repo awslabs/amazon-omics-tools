@@ -154,7 +154,7 @@ def get_instance(cpus, mem):
 
 
 def get_pricing(pricing, resource, region, hours):
-    key = f"{resource}:{region}"
+    key = f"{resource}:{region}"    # noqa E231
     price = get_pricing.pricing.get(key)
     if price:
         return price * hours
@@ -534,7 +534,7 @@ if __name__ == "__main__":
             def tocsv(val):
                 if val is None:
                     return ""
-                return f"{val:f}" if type(val) is float else str(val)
+                return f"{val:f}" if type(val) is float else str(val) # noqa E231
 
             hdrs = [
                 "arn",

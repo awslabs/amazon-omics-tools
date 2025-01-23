@@ -136,7 +136,7 @@ def plot_timeline(tasks, title="", time_units="min", max_duration_hrs=5, show_pl
     p_run.title.text = (
         f"{title}, "
         f"tasks: {len(tasks)}, "
-        f"wall time: {(_parse_time_str(max_stop_time) - _parse_time_str(min_creation_time)).total_seconds() * time_scale_factor:.2f} {time_units}"
+        f"wall time: {(_parse_time_str(max_stop_time) - _parse_time_str(min_creation_time)).total_seconds() * time_scale_factor:.2f} {time_units}" # noqa
     )
 
     layout = column(Div(text=f"<strong>{title}</strong>"), p_run)
