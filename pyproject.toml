@@ -3,26 +3,17 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "aws-healthomics-tools"
+name = "aws-omics-tools"
 version = "0.11.0"
 license = "Apache-2.0"
-description = "Tools for working with the AWS HealthOmics Service"
-repository = "https://github.com/awslabs/amazon-omics-tools"
+description = "This package has been renamed to aws-healthomics-tools"
 authors = ["Amazon Web Services"]
 readme = "README.md"
 packages = [{ include = "omics" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-s3transfer = "^0.10.2"
-boto3 = "^1.35.66"
-mypy-boto3-omics = "^1.35.66"
-boto3-stubs = "^1.35.66"
-botocore-stubs = "^1.35.66"
-docopt = "^0.6.2"
-python-dateutil = "^2.8.2"
-bokeh = "^3.5.1"
-pandas = "^2.2.2"
+aws-healthomics-tools = "^0.11"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=22.8,<25.0"
