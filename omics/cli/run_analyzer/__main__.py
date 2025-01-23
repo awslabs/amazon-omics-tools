@@ -442,7 +442,7 @@ def get_timeline_event(res, resources):
 
 if __name__ == "__main__":
     # Parse command-line options
-    opts = docopt.docopt(__doc__, version=f"v{importlib.metadata.version('amazon-omics-tools')}")
+    opts = docopt.docopt(__doc__, version=f"v{importlib.metadata.version('aws-healthomics-tools')}")
     if opts["--verbose"]:
         # print(opts, file=sys.stderr)
         logger.setLevel(logging.DEBUG)
