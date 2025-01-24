@@ -34,7 +34,7 @@ SDK and CLI Tools for working with the AWS HealthOmics Service.
 AWS HealthOmics Tools is available through pypi. To install, type:
 
 ```bash
-pip install amazon-omics-tools
+pip install aws-healthomics-tools
 ```
 
 ### Install from source

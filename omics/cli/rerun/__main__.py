@@ -310,8 +310,8 @@ if __name__ == "__main__":
             rqst0 = start_run_request(run)
             rqst = start_run_request(run, opts)
             if rqst != rqst0:
-                out.write(f"Original request:\n{json.dumps(rqst0, indent=2)}\n")
-            out.write(f"StartRun request:\n{json.dumps(rqst, indent=2)}\n")
+                out.write(f"Original request:\n{json.dumps(rqst0, indent=2)}\n")  # noqa
+            out.write(f"StartRun request:\n{json.dumps(rqst, indent=2)}\n")  # noqa
             if not opts["--dry-run"]:
                 try:
                     omics = boto3.client("omics")
@@ -319,7 +319,7 @@ if __name__ == "__main__":
                 except Exception as e:
                     die(f"StartRun failed: {e}")
                 del resp["ResponseMetadata"]  # type: ignore
-                out.write(f"StartRun response:\n{json.dumps(resp, indent=2)}\n")
+                out.write(f"StartRun response:\n{json.dumps(resp, indent=2)}\n")  # noqa
 
     if opts["--out"]:
         out.close()
