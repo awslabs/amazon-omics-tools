@@ -5,20 +5,20 @@ SDK and CLI Tools for working with the AWS HealthOmics Service.
 - [AWS HealthOmics Tools](#aws-healthomics-tools)
   - [Installation](#installation)
   - [SDK Tools](#sdk-tools)
-    - [Omics Transfer Manager](#omics-transfer-manager)
+    - [HealthOmics Transfer Manager](#healthomics-transfer-manager)
       - [Basic Usage](#basic-usage)
       - [Download specific files](#download-specific-files)
       - [Upload specific files](#upload-specific-files)
       - [Subscribe to events](#subscribe-to-events)
       - [Threads](#threads)
-    - [Omics URI Parser](#omics-uri-parser)
+    - [HealthOmics URI Parser](#healthomics-uri-parser)
       - [Readset file URI:](#readset-file-uri)
       - [Reference file URI:](#reference-file-uri)
   - [CLI Tools](#cli-tools)
-    - [Omics Rerun](#omics-rerun)
+    - [HealthOmics Rerun](#healthomics-rerun)
       - [List runs from manifest](#list-runs-from-manifest)
       - [Rerun a previously-executed run](#rerun-a-previously-executed-run)
-    - [Omics Run Analyzer](#omics-run-analyzer)
+    - [HealthOmics Run Analyzer](#healthomics-run-analyzer)
       - [List completed runs](#list-completed-runs)
       - [Analyze a specific workflow run](#analyze-a-specific-workflow-run)
       - [Run optimization and estimated cost reduction](#run-optimization-and-estimated-cost-reduction)
@@ -45,14 +45,14 @@ Installing from source requires that your machine has the following prerequisite
 - `make` build tool
 
 ```
-git clone https://github.com/awslabs/amazon-omics-tools.git
-cd ./amazon-omics-tools
+git clone https://github.com/awslabs/aws-healthomics-tools.git
+cd ./aws-healthomics-tools
 make install
 ```
 
 ## SDK Tools
 
-### Omics Transfer Manager
+### HealthOmics Transfer Manager
 
 #### Basic Usage
 The `TransferManager` class makes it easy to download files from a AWS HealthOmics reference or read set.  By default the files are saved to the current directory, or you can specify a custom location with the `directory` parameter.
@@ -153,7 +153,7 @@ manager = TransferManager(client, config)
 manager.download_read_set(SEQUENCE_STORE_ID, "<my-read-set-id>")
 ```
 
-### Omics URI Parser
+### HealthOmics URI Parser
 
 The `OmicsUriParser` class makes it easy to parse AWS HealthOmics readset and reference URIs to extract fields relevant for calling 
 AWS HealthOmics APIs.
@@ -222,9 +222,9 @@ CLI tools are modules in this package that can be invoked from the command line 
 python -m omics.cli.<TOOL-NAME>
 ```
 
-### Omics Rerun
+### HealthOmics Rerun
 
-The `omics-rerun` tool makes it easy to start a new run execution from a CloudWatch Logs manifest.
+The `rerun` tool makes it easy to start a new run execution from a CloudWatch Logs manifest.
 
 For an overview of what it does and available options run:
 
@@ -329,8 +329,8 @@ StartRun request:
 }
 ```
 
-### Omics Run Analyzer
-The `omics-run-analyzer` tool retrieves a workflow run manifest from CloudWatchLogs and generates statistics for the run, including CPU and memory utilization for each workflow task.
+### HealthOmics Run Analyzer
+The `run_analyzer` tool retrieves a workflow run manifest from CloudWatchLogs and generates statistics for the run, including CPU and memory utilization for each workflow task.
 
 For an overview of what it does and available options run:
 
@@ -498,4 +498,3 @@ See [CONTRIBUTING](https://github.com/awslabs/amazon-omics-tools/blob/main/CONTR
 ## License
 
 This project is licensed under the Apache-2.0 License.
-
