@@ -96,7 +96,6 @@ STORAGE_TYPE_STATIC_RUN_STORAGE = "STATIC"
 PRICE_RESOURCE_TYPE_DYNAMIC_RUN_STORAGE = "Dynamic Run Storage"
 PRICE_RESOURCE_TYPE_STATIC_RUN_STORAGE = "Run Storage"
 
-
 def die(msg):
     """Show error message and terminate"""
     exit(f"{exename}: {msg}")
@@ -537,6 +536,7 @@ if __name__ == "__main__":
                 return f"{val:f}" if type(val) is float else str(val)  # noqa E231
 
             hdrs = [
+                "uuid",
                 "arn",
                 "type",
                 "name",

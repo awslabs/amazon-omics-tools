@@ -371,6 +371,7 @@ omics-run-analyzer: wrote run-1234567.csv
 
 The CSV output by the command above includes the following columns:
 
+* __uuid__ : Globally unique identifier to identify runs across accounts and regions
 * __arn__ : Unique workflow run or task identifier
 * __type__ : Resource type (_run_ or _task_)
 * __name__ : Workflow run or task name
