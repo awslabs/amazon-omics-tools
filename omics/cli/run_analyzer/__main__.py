@@ -153,7 +153,7 @@ def get_instance(cpus, mem):
 
 
 def get_pricing(pricing, resource, region, hours):
-    key = f"{resource}:{region}"
+    key = f"{resource}:{region}"  # noqa E231
     price = get_pricing.pricing.get(key)
     if price:
         return price * hours
@@ -441,7 +441,7 @@ def get_timeline_event(res, resources):
 
 if __name__ == "__main__":
     # Parse command-line options
-    opts = docopt.docopt(__doc__, version=f"v{importlib.metadata.version('amazon-omics-tools')}")
+    opts = docopt.docopt(__doc__, version=f"v{importlib.metadata.version('aws-healthomics-tools')}")
     if opts["--verbose"]:
         # print(opts, file=sys.stderr)
         logger.setLevel(logging.DEBUG)
@@ -533,7 +533,7 @@ if __name__ == "__main__":
             def tocsv(val):
                 if val is None:
                     return ""
-                return f"{val:f}" if type(val) is float else str(val)
+                return f"{val:f}" if type(val) is float else str(val)  # noqa E231
 
             hdrs = [
                 "uuid",
